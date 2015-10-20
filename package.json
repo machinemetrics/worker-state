@@ -21,6 +21,8 @@
     "q": "^1.4.1"
   },
   "devDependencies": {
+    "dynalite": "^0.16.0",
+    "kinesalite": "^1.9.0",
     "mocha": "^2.3.3",
     "should": "^7.1.0"
   }
