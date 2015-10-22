@@ -10,7 +10,7 @@ var _ = require('lodash'),
 
 var services = new TestServices();
 
-describe.only('Something', function () {
+describe('Something', function () {
   before(function () {
     return Q.all([
       services.initKinesis({ stream: 'stream1' }),
