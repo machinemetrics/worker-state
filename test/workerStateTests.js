@@ -201,10 +201,10 @@ describe('Checkpointing', function () {
         restate.deleteSubValue('cp1-3', 'sub3');
 
         return restate.flush(10).then(function () {
-          itemShouldMatch(restate.state['cp1-2'], 'g', 'b', 10, false);
-          itemShouldMatch(restate.state['cp1-4'], undefined, 'e', 10, false);
-          itemShouldMatch(restate.substate['cp1-3'].sub2, 'h', 'd', 10, false);
-          itemShouldMatch(restate.substate['cp1-3'].sub3, undefined, 'f', 10, false);
+          itemShouldMatch(restate.state['cp1-2'], 'g', 'g', 10, false);
+          itemShouldMatch(restate.state['cp1-4'], undefined, undefined, 10, false);
+          itemShouldMatch(restate.substate['cp1-3'].sub2, 'h', 'h', 10, false);
+          itemShouldMatch(restate.substate['cp1-3'].sub3, undefined, undefined, 10, false);
         });
       });
     }).then(function () {
