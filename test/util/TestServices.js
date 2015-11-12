@@ -1,5 +1,6 @@
 var Q = require('q'),
     _ = require('lodash'),
+    bigInt = require('big-integer'),
     kinesalite = require('kinesalite'),
     dynalite = require('dynalite'),
     AWS = require('aws-sdk-q');
@@ -28,7 +29,8 @@ TestServices.prototype.initKinesis = function(cfg) {
   var kinesaliteServer = kinesalite({
     createStreamMs: 25,
     deleteStreamMs: 25,
-    updateStreamMs: 25
+    updateStreamMs: 25,
+    shardLimit: 1000
   });
   var port = TestServices.NextPort();
   kinesaliteServer.listen(port, function(err) {
@@ -159,11 +161,17 @@ TestServices.prototype.mergeShards = function(streamName, shardId1, shardId2) {
 };
 
 function averageMD5 (hash1, hash2) {
-  hash1 = hash1 + _.repeat('0', Math.max(hash1.length, hash2.length) - hash1.length);
-  hash2 = hash2 + _.repeat('0', Math.max(hash1.length, hash2.length) - hash2.length);
-  return _(_.zip(hash1.split(''), hash2.split(''))).map(function (pair) {
-    return (~~((parseInt(pair[0], 16) + parseInt(pair[1], 16)) / 2)).toString(16);
-  }).value().join('').substring(0, 8);
+  return parseHashKey(hash1).add(parseHashKey(hash2)).divide(2).toString();
+}
+
+function parseHashKey (hash) {
+  // A hack to get around (Kinesalite?) setting hashes in e+ format after a split.  It still contains all the digits.
+  if (hash.indexOf('e+') > -1) {
+    var exp = parseInt(hash.match(/e\+(\d+)/)[1]);
+    hash = _.padRight(hash.replace(/\.|e\+\d+/g, ''), exp + 1, 0);
+  }
+
+  return bigInt(hash);
 }
 
 module.exports = TestServices;

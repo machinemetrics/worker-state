@@ -20,7 +20,7 @@ describe('Something', function () {
 
   it('Pushes some records of a single key', function () {
     var producer = new DataServices.RecordProducer(1);
-    var worker = new WorkerState(WorkerState.DefaultTable, 'test1', 'shardId-000000000000', services.dynamodb);
+    var worker = new WorkerState(WorkerState.DefaultTable, 'test1', 'shardId-000000000000');
     var pusher = new KinesisPusher(worker, 'stream1', services.kinesis);
 
     return pusher.pushRecords(producer.generate(100), 10).then(function () {
