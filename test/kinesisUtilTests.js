@@ -1,7 +1,8 @@
 var _ = require('lodash'),
     should = require('should'),
-    KinesisUtil = require('../lib/kinesisUtil');
-    TestServices = require('./util/TestServices');
+    KinesisUtil = require('../lib/kinesisUtil'),
+    TestServices = require('./util/TestServices'),
+    DataServices = require('./util/DataServices');
 
 var services = new TestServices();
 
@@ -60,6 +61,18 @@ describe('Something', function () {
       _.map(kutil.getShardLineage(shards, 'alpha'), 'ShardId').should.containDeepOrdered(['shardId-000000000000', 'shardId-000000000001', 'shardId-000000000005']);
       _.map(kutil.getShardLineage(shards, 'bravo'), 'ShardId').should.containDeepOrdered(['shardId-000000000000', 'shardId-000000000002', 'shardId-000000000004']);
       _.map(kutil.getShardLineage(shards, 'charlie'), 'ShardId').should.containDeepOrdered(['shardId-000000000000', 'shardId-000000000002', 'shardId-000000000003', 'shardId-000000000005']);
+    });
+  });
+
+  it.only('Should pack 10 records into 1 kinesis record', function () {
+    var producer = new DataServices.RecordProducer(1);
+    var kutil = new KinesisUtil(services.kinesis);
+
+    return kutil.pushRecords('stream1', producer.generate(10)).then(function (seqs) {
+      seqs.length.should.equal(1);
+      return producer.validateStream(services.kinesis, 'stream1', 'shardId-000000000000').then(function (result) {
+        result.should.be.true();
+      });
     });
   });
 });
