@@ -1,6 +1,7 @@
 var _ = require('lodash'),
     async = require('async-q'),
-    md5 = require('md5');
+    md5 = require('md5'),
+    KinesisUtil = require('../../lib/kinesisUtil');
 
 function RecordProducer (partitionCount) {
   this.partitions = _.times(partitionCount, function (n) {
@@ -39,17 +40,19 @@ RecordProducer.prototype.generateRoundRobin = function (count) {
   return recordSet;
 };
 
-RecordProducer.prototype.validateStream = function (kinesis, stream, shard, seq) {
+RecordProducer.prototype.validateStream = function (kinesis, stream, shard, options) {
   var self = this;
+  var util = new KinesisUtil(kinesis);
   var iteratorParams = {
     ShardId: shard,
     ShardIteratorType: 'TRIM_HORIZON',
     StreamName: stream
   };
 
-  if (seq) {
+  options = options || {};
+  if (options.seq) {
     iteratorParams.ShardIteratorType = 'AFTER_SEQUENCE_NUMBER';
-    iteratorParams.StartingSequenceNumber = seq;
+    iteratorParams.StartingSequenceNumber = options.seq;
   }
 
   var recs = [];
@@ -69,6 +72,19 @@ RecordProducer.prototype.validateStream = function (kinesis, stream, shard, seq)
       });
     });
   }).then(function () {
+    recs = util.unpackRecords(recs, false);
+    if (options.packCounts) {
+      if (options.packCounts.length != recs.length)
+        return false;
+
+      var countsMatch = _.every(_.zip(recs, options.packCounts), function (item) {
+        return item[0].length == item[1];
+      });
+      if (!countsMatch)
+        return false;
+    }
+
+    recs = _.flatten(recs);
     var A = _.groupBy(self.records, 'PartitionKey');
     var B = _.groupBy(recs, 'PartitionKey');
     if (_.xor(_.keys(A), _.keys(B)).length > 0)
@@ -77,7 +93,7 @@ RecordProducer.prototype.validateStream = function (kinesis, stream, shard, seq)
     var failures = _(self.partitions).map(function (key) {
       var pairs = _.zip(A[key], B[key]);
       return _.filter(pairs, function (pair) {
-        return pair[0].Data != pair[1].Data.toString('utf8');
+        return pair[0].Data != pair[1].Data;
       });
     }).flatten().value();
 

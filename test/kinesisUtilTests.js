@@ -99,23 +99,23 @@ describe('Something', function () {
     var producer = new DataServices.RecordProducer(1);
     var kutil = new KinesisUtil(services.kinesis);
 
-    var records = kutil.groupAndAggregateRecords(producer.generate(10))
+    var records = kutil.groupAndPackRecords(producer.generate(10))
     return kutil.pushRecords('stream1', records).then(function (seqs) {
       _.keys(seqs).length.should.equal(1);
-      return producer.validateStream(services.kinesis, 'stream1', 'shardId-000000000000').then(function (result) {
+      return producer.validateStream(services.kinesis, 'stream1', 'shardId-000000000000', { packCount: [10] }).then(function (result) {
         result.should.be.true();
       });
     });
   });
 
-  it.only('Should push 10 records as 3 kinesis agg records', function () {
+  it('Should push 10 records as 3 kinesis agg records', function () {
     var producer = new DataServices.RecordProducer(1);
     var kutil = new KinesisUtil(services.kinesis);
 
-    var records = kutil.groupAndAggregateRecords(producer.generate(250))
+    var records = kutil.groupAndPackRecords(producer.generate(250))
     return kutil.pushRecords('stream1', records).then(function (seqs) {
       _.keys(seqs).length.should.equal(1);
-      return producer.validateStream(services.kinesis, 'stream1', 'shardId-000000000000').then(function (result) {
+      return producer.validateStream(services.kinesis, 'stream1', 'shardId-000000000000', { packCounts: [100, 100, 50] }).then(function (result) {
         result.should.be.true();
       });
     });
@@ -125,10 +125,10 @@ describe('Something', function () {
     var producer = new DataServices.RecordProducer(10);
     var kutil = new KinesisUtil(services.kinesis);
 
-    var records = kutil.groupAndAggregateRecords(producer.generateRoundRobin(10))
+    var records = kutil.groupAndPackRecords(producer.generateRoundRobin(10))
     return kutil.pushRecords('stream1', records).then(function (seqs) {
       _.keys(seqs).length.should.equal(1);
-      return producer.validateStream(services.kinesis, 'stream1', 'shardId-000000000000').then(function (result) {
+      return producer.validateStream(services.kinesis, 'stream1', 'shardId-000000000000', { packCount: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1] }).then(function (result) {
         result.should.be.true();
       });
     });
