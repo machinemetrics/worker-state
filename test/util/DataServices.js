@@ -23,6 +23,22 @@ RecordProducer.prototype.generate = function (count) {
   return recordSet;
 };
 
+RecordProducer.prototype.generateRoundRobin = function (count) {
+  var self = this;
+  var pIndex = 0;
+  var recordSet = _.times(count, function () {
+    if (pIndex >= self.partitions.length)
+      pIndex = 0;
+    return {
+      PartitionKey: self.partitions[pIndex++],
+      Data: self.index++
+    };
+  });
+
+  this.records = this.records.concat(recordSet);
+  return recordSet;
+};
+
 RecordProducer.prototype.validateStream = function (kinesis, stream, shard, seq) {
   var self = this;
   var iteratorParams = {

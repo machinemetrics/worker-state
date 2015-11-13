@@ -64,12 +64,70 @@ describe('Something', function () {
     });
   });
 
-  it.only('Should pack 10 records into 1 kinesis record', function () {
+  it('Should find max sequence numbers in all shards', function () {
+    var kutil = new KinesisUtil(services.kinesis);
+    var data = [
+      { ShardId: 'shardId-000000000000', SequenceNumber: '49556303523432154881539545814062592752077878316425543682' },
+      { ShardId: 'shardId-000000000000', SequenceNumber: '59556303523432154881539545814062592752077878316425543682' },
+      { ShardId: 'shardId-000000000000', SequenceNumber: '43556303523432154881539545814062592752077878316425543682' },
+      { ShardId: 'shardId-000000000000', SequenceNumber: '9955630352343215488153954581406259275207787831642554368' },
+      { ShardId: 'shardId-000000000001', SequenceNumber: '49556303523432154881539545814062592752097878316425543682' },
+      { ShardId: 'shardId-000000000001', SequenceNumber: '59556303523432154881539545814062592752097878316425543682' },
+      { ShardId: 'shardId-000000000001', SequenceNumber: '43556303523432154881539545814062592752097878316425543682' },
+      { ShardId: 'shardId-000000000001', SequenceNumber: '9955630352343215488153954581406259275209787831642554368' }
+    ];
+
+    var maxSeq = kutil.getMaxSequenceNumbers(data);
+    maxSeq.should.have.properties(['shardId-000000000000', 'shardId-000000000001']);
+    maxSeq['shardId-000000000000'].toString().should.equal('59556303523432154881539545814062592752077878316425543682');
+    maxSeq['shardId-000000000001'].toString().should.equal('59556303523432154881539545814062592752097878316425543682');
+  });
+
+  it('Should push 10 records as 10 kinesis records', function () {
     var producer = new DataServices.RecordProducer(1);
     var kutil = new KinesisUtil(services.kinesis);
 
     return kutil.pushRecords('stream1', producer.generate(10)).then(function (seqs) {
-      seqs.length.should.equal(1);
+      _.keys(seqs).length.should.equal(1);
+      return producer.validateStream(services.kinesis, 'stream1', 'shardId-000000000000').then(function (result) {
+        result.should.be.true();
+      });
+    });
+  });
+
+  it('Should push 10 records as 1 kinesis agg record', function () {
+    var producer = new DataServices.RecordProducer(1);
+    var kutil = new KinesisUtil(services.kinesis);
+
+    var records = kutil.groupAndAggregateRecords(producer.generate(10))
+    return kutil.pushRecords('stream1', records).then(function (seqs) {
+      _.keys(seqs).length.should.equal(1);
+      return producer.validateStream(services.kinesis, 'stream1', 'shardId-000000000000').then(function (result) {
+        result.should.be.true();
+      });
+    });
+  });
+
+  it.only('Should push 10 records as 3 kinesis agg records', function () {
+    var producer = new DataServices.RecordProducer(1);
+    var kutil = new KinesisUtil(services.kinesis);
+
+    var records = kutil.groupAndAggregateRecords(producer.generate(250))
+    return kutil.pushRecords('stream1', records).then(function (seqs) {
+      _.keys(seqs).length.should.equal(1);
+      return producer.validateStream(services.kinesis, 'stream1', 'shardId-000000000000').then(function (result) {
+        result.should.be.true();
+      });
+    });
+  });
+
+  it('Should push 10 records as 10 kinesis agg record', function () {
+    var producer = new DataServices.RecordProducer(10);
+    var kutil = new KinesisUtil(services.kinesis);
+
+    var records = kutil.groupAndAggregateRecords(producer.generateRoundRobin(10))
+    return kutil.pushRecords('stream1', records).then(function (seqs) {
+      _.keys(seqs).length.should.equal(1);
       return producer.validateStream(services.kinesis, 'stream1', 'shardId-000000000000').then(function (result) {
         result.should.be.true();
       });
