@@ -82,6 +82,12 @@ describe('Something', function () {
     maxSeq['shardId-000000000000'].toString().should.equal('59556303523432154881539545814062592752077878316425543682');
     maxSeq['shardId-000000000001'].toString().should.equal('59556303523432154881539545814062592752097878316425543682');
   });
+});
+
+describe('Pushing Records', function () {
+  before(function () {
+    return services.initKinesis({stream: 'stream1'});
+  });
 
   it('Should push 10 records as 10 kinesis records', function () {
     var producer = new DataServices.RecordProducer(1);

@@ -27,6 +27,30 @@ describe('Something', function () {
       return producer.validateStream(services.kinesis, 'stream1', 'shardId-000000000000').then(function (result) {
         result.should.be.true();
       });
+    }).then(function () {
+      return worker.expungeAllKnownSavedState();
     });
+  });
+
+
+});
+
+describe('Record Culling', function () {
+  var worker, producer, pusher;
+
+  before(function () {
+    return services.initKinesis({stream: 'stream1'}).then(function () {
+      worker = new WorkerState(WorkerState.DefaultTable, 'testcull', 'shardId-000000000000');
+      pusher = new KinesisPusher(worker, 'stream1', services.kinesis);
+      producer = new DataServices.RecordProducer(1);
+    });
+  });
+
+  after(function () {
+    worker.expungeAllKnownSavedState();
+  });
+
+  it('Should cull all records from empty worker on 1 shard', function () {
+    return 
   });
 });
