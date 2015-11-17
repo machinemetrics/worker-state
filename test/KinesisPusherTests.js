@@ -4,6 +4,7 @@ var _ = require('lodash'),
     Q = require('q'),
     should = require('should'),
     KinesisPusher = require('../lib').KinesisPusher,
+    KinesisUtil = require('../lib/kinesisUtil'),
     WorkerState = require('../lib').WorkerState,
     TestServices = require('./util/TestServices'),
     DataServices = require('./util/DataServices');
@@ -50,7 +51,16 @@ describe('Record Culling', function () {
     worker.expungeAllKnownSavedState();
   });
 
-  it('Should cull all records from empty worker on 1 shard', function () {
-    return 
+  it.only('Should cull all records from empty worker on 1 shard', function () {
+    var kutil = new KinesisUtil(services.kinesis);
+    var records = producer.generate(100);
+
+    return kutil.pushRecords('stream1', records).then(function (maxSeqs) {
+      return pusher.cullPreviouslyPushedRecords(records).then(function (filtered) {
+        filtered.length.should.equal(0);
+      });
+    });
   });
+
+  
 });
