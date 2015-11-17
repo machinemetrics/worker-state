@@ -26,20 +26,31 @@ TestServices.prototype.initKinesis = function(cfg) {
   var deferred = Q.defer();
   var self = this;
 
-  var kinesaliteServer = kinesalite({
+  self.kinesaliteServer = kinesalite({
     createStreamMs: 25,
     deleteStreamMs: 25,
     updateStreamMs: 25,
     shardLimit: 1000
   });
   var port = TestServices.NextPort();
-  kinesaliteServer.listen(port, function(err) {
+  self.kinesaliteServer.listen(port, function(err) {
     if(err)
       return deferred.reject(err);
 
     self.kinesis = new AWS.Kinesis({ endpoint: 'localhost:' + port });
 
     deferred.resolve(self.ensureStream(cfg.stream));
+  });
+
+  return deferred.promise;
+};
+
+TestServices.prototype.stopKinesis = function() {
+  var deferred = Q.defer();
+  this.kinesaliteServer.close(function (err) {
+    if (err)
+      return deferred.reject(err);
+    deferred.resolve();
   });
 
   return deferred.promise;

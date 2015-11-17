@@ -4,9 +4,14 @@ var _ = require('lodash'),
     KinesisUtil = require('../../lib/kinesisUtil');
 
 function RecordProducer (partitionCount) {
-  this.partitions = _.times(partitionCount, function (n) {
-    return md5(n);
-  });
+  if (_.isArray(partitionCount))
+    this.partitions = partitionCount;
+  else {
+    this.partitions = _.times(partitionCount, function (n) {
+      return md5(n);
+    });
+  }
+
   this.index = 0;
   this.records = [];
 }

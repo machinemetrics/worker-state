@@ -36,10 +36,10 @@ describe('Something', function () {
 
 });
 
-describe('Record Culling', function () {
+describe.only('Record Culling', function () {
   var worker, producer, pusher;
 
-  before(function () {
+  beforeEach(function () {
     return services.initKinesis({stream: 'stream1'}).then(function () {
       worker = new WorkerState(WorkerState.DefaultTable, 'testcull', 'shardId-000000000000');
       pusher = new KinesisPusher(worker, 'stream1', services.kinesis);
@@ -47,11 +47,14 @@ describe('Record Culling', function () {
     });
   });
 
-  after(function () {
-    worker.expungeAllKnownSavedState();
+  afterEach(function () {
+    return Q.all([
+      worker.expungeAllKnownSavedState(),
+      services.stopKinesis()
+    ]);
   });
 
-  it.only('Should cull all records from empty worker on 1 shard', function () {
+  it('Should cull all records from empty worker on 1 shard', function () {
     var kutil = new KinesisUtil(services.kinesis);
     var records = producer.generate(100);
 
@@ -62,5 +65,112 @@ describe('Record Culling', function () {
     });
   });
 
-  
+  it('Should cull some records from empty worker on 1 shard', function () {
+    var kutil = new KinesisUtil(services.kinesis);
+    var records = producer.generate(100);
+
+    return kutil.pushRecords('stream1', _.take(records, 50)).then(function (maxSeqs) {
+      return pusher.cullPreviouslyPushedRecords(records).then(function (filtered) {
+        filtered.length.should.equal(50);
+        _.each(filtered, function (r) {
+          r.Data.should.be.aboveOrEqual(50);
+        });
+      });
+    });
+  });
+
+  it('Should cull all records from empty worker on 2 shards', function () {
+    producer = new DataServices.RecordProducer(['alpha', 'bravo']);
+    pusher = new KinesisPusher(worker, 'stream2', services.kinesis);
+
+    var kutil = new KinesisUtil(services.kinesis);
+    var records = producer.generateRoundRobin(100);
+
+    return services.kinesis.createStream({
+      ShardCount: 2,
+      StreamName: 'stream2'
+    }).q().delay(50).then(function () {
+      return kutil.pushRecords('stream2', records).then(function (maxSeqs) {
+        _.keys(maxSeqs).length.should.equal(2);
+        return pusher.cullPreviouslyPushedRecords(records).then(function (filtered) {
+          filtered.length.should.equal(0);
+        });
+      });
+    });
+  });
+
+  it('Should cull some records from empty worker on 2 shards', function () {
+    producer = new DataServices.RecordProducer(['alpha', 'bravo']);
+    pusher = new KinesisPusher(worker, 'stream2', services.kinesis);
+
+    var kutil = new KinesisUtil(services.kinesis);
+    var records = producer.generateRoundRobin(100);
+
+    return services.kinesis.createStream({
+      ShardCount: 2,
+      StreamName: 'stream2'
+    }).q().delay(50).then(function () {
+      return kutil.pushRecords('stream2', _.take(records, 60)).then(function (maxSeqs) {
+        _.keys(maxSeqs).length.should.equal(2);
+        return pusher.cullPreviouslyPushedRecords(records).then(function (filtered) {
+          filtered.length.should.equal(40);
+          _.groupBy(filtered, 'PartitionKey').alpha.length.should.equal(20);
+          _.groupBy(filtered, 'PartitionKey').bravo.length.should.equal(20);
+          _.each(filtered, function (r) {
+            r.Data.should.be.aboveOrEqual(50);
+          });
+        });
+      });
+    });
+  });
+
+  it('Should cull some records from empty worker on split shard', function () {
+    producer = new DataServices.RecordProducer(['alpha', 'bravo']);
+
+    var kutil = new KinesisUtil(services.kinesis);
+    var records = producer.generateRoundRobin(100);
+
+    return kutil.pushRecords('stream1', _.take(records, 30)).then(function () {
+      return services.splitShard('stream1', 'shardId-000000000000');
+    }).then(function () {
+      return kutil.pushRecords('stream1', _.slice(records, 30, 60));
+    }).then(function () {
+      return pusher.cullPreviouslyPushedRecords(records).then(function (filtered) {
+        filtered.length.should.equal(40);
+        _.groupBy(filtered, 'PartitionKey').alpha.length.should.equal(20);
+        _.groupBy(filtered, 'PartitionKey').bravo.length.should.equal(20);
+        _.each(filtered, function (r) {
+          r.Data.should.be.aboveOrEqual(60);
+        });
+      });
+    });
+  });
+
+  it.only('Should cull some records from empty worker on merged shard', function () {
+    producer = new DataServices.RecordProducer(['alpha', 'bravo']);
+    pusher = new KinesisPusher(worker, 'stream2', services.kinesis);
+
+    var kutil = new KinesisUtil(services.kinesis);
+    var records = producer.generateRoundRobin(100);
+
+    return services.kinesis.createStream({
+      ShardCount: 2,
+      StreamName: 'stream2'
+    }).q().delay(50).then(function () {
+      return kutil.pushRecords('stream2', _.take(records, 30)).then(function () {
+        return services.mergeShards('stream2', 'shardId-000000000000', 'shardId-000000000001');
+      }).then(function () {
+        return kutil.pushRecords('stream2', _.slice(records, 30, 60));
+      }).then(function () {
+        return pusher.cullPreviouslyPushedRecords(records).then(function (filtered) {
+          filtered.length.should.equal(40);
+          _.groupBy(filtered, 'PartitionKey').alpha.length.should.equal(20);
+          _.groupBy(filtered, 'PartitionKey').bravo.length.should.equal(20);
+          _.each(filtered, function (r) {
+            r.Data.should.be.aboveOrEqual(60);
+          });
+        });
+      });
+    });
+  });
 });
