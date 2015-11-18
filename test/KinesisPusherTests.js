@@ -37,12 +37,14 @@ describe('Something', function () {
 });
 
 describe.only('Record Culling', function () {
-  var worker, producer, pusher;
+  var worker, producer, pusher, streamName;
+  var streamIndex = 0;
 
   beforeEach(function () {
-    return services.initKinesis({stream: 'stream1'}).then(function () {
+    streamName = 'streamrc' + streamIndex++;
+    return services.initKinesis({stream: streamName}).then(function () {
       worker = new WorkerState(WorkerState.DefaultTable, 'testcull', 'shardId-000000000000');
-      pusher = new KinesisPusher(worker, 'stream1', services.kinesis);
+      pusher = new KinesisPusher(worker, streamName, services.kinesis);
       producer = new DataServices.RecordProducer(1);
     });
   });
@@ -58,7 +60,7 @@ describe.only('Record Culling', function () {
     var kutil = new KinesisUtil(services.kinesis);
     var records = producer.generate(100);
 
-    return kutil.pushRecords('stream1', records).then(function (maxSeqs) {
+    return kutil.pushRecords(streamName, records).then(function (maxSeqs) {
       return pusher.cullPreviouslyPushedRecords(records).then(function (filtered) {
         filtered.length.should.equal(0);
       });
@@ -69,7 +71,7 @@ describe.only('Record Culling', function () {
     var kutil = new KinesisUtil(services.kinesis);
     var records = producer.generate(100);
 
-    return kutil.pushRecords('stream1', _.take(records, 50)).then(function (maxSeqs) {
+    return kutil.pushRecords(streamName, _.take(records, 50)).then(function (maxSeqs) {
       return pusher.cullPreviouslyPushedRecords(records).then(function (filtered) {
         filtered.length.should.equal(50);
         _.each(filtered, function (r) {
@@ -81,16 +83,16 @@ describe.only('Record Culling', function () {
 
   it('Should cull all records from empty worker on 2 shards', function () {
     producer = new DataServices.RecordProducer(['alpha', 'bravo']);
-    pusher = new KinesisPusher(worker, 'stream2', services.kinesis);
+    pusher = new KinesisPusher(worker, 'mstream1', services.kinesis);
 
     var kutil = new KinesisUtil(services.kinesis);
     var records = producer.generateRoundRobin(100);
 
     return services.kinesis.createStream({
       ShardCount: 2,
-      StreamName: 'stream2'
+      StreamName: 'mstream1'
     }).q().delay(50).then(function () {
-      return kutil.pushRecords('stream2', records).then(function (maxSeqs) {
+      return kutil.pushRecords('mstream1', records).then(function (maxSeqs) {
         _.keys(maxSeqs).length.should.equal(2);
         return pusher.cullPreviouslyPushedRecords(records).then(function (filtered) {
           filtered.length.should.equal(0);
@@ -101,16 +103,16 @@ describe.only('Record Culling', function () {
 
   it('Should cull some records from empty worker on 2 shards', function () {
     producer = new DataServices.RecordProducer(['alpha', 'bravo']);
-    pusher = new KinesisPusher(worker, 'stream2', services.kinesis);
+    pusher = new KinesisPusher(worker, 'mstream2', services.kinesis);
 
     var kutil = new KinesisUtil(services.kinesis);
     var records = producer.generateRoundRobin(100);
 
     return services.kinesis.createStream({
       ShardCount: 2,
-      StreamName: 'stream2'
+      StreamName: 'mstream2'
     }).q().delay(50).then(function () {
-      return kutil.pushRecords('stream2', _.take(records, 60)).then(function (maxSeqs) {
+      return kutil.pushRecords('mstream2', _.take(records, 60)).then(function (maxSeqs) {
         _.keys(maxSeqs).length.should.equal(2);
         return pusher.cullPreviouslyPushedRecords(records).then(function (filtered) {
           filtered.length.should.equal(40);
@@ -130,10 +132,10 @@ describe.only('Record Culling', function () {
     var kutil = new KinesisUtil(services.kinesis);
     var records = producer.generateRoundRobin(100);
 
-    return kutil.pushRecords('stream1', _.take(records, 30)).then(function () {
-      return services.splitShard('stream1', 'shardId-000000000000');
+    return kutil.pushRecords(streamName, _.take(records, 30)).then(function () {
+      return services.splitShard(streamName, 'shardId-000000000000');
     }).then(function () {
-      return kutil.pushRecords('stream1', _.slice(records, 30, 60));
+      return kutil.pushRecords(streamName, _.slice(records, 30, 60));
     }).then(function () {
       return pusher.cullPreviouslyPushedRecords(records).then(function (filtered) {
         filtered.length.should.equal(40);
@@ -148,19 +150,19 @@ describe.only('Record Culling', function () {
 
   it.only('Should cull some records from empty worker on merged shard', function () {
     producer = new DataServices.RecordProducer(['alpha', 'bravo']);
-    pusher = new KinesisPusher(worker, 'stream2', services.kinesis);
+    pusher = new KinesisPusher(worker, 'mstream3', services.kinesis);
 
     var kutil = new KinesisUtil(services.kinesis);
     var records = producer.generateRoundRobin(100);
 
     return services.kinesis.createStream({
       ShardCount: 2,
-      StreamName: 'stream2'
+      StreamName: 'mstream3'
     }).q().delay(50).then(function () {
-      return kutil.pushRecords('stream2', _.take(records, 30)).then(function () {
-        return services.mergeShards('stream2', 'shardId-000000000000', 'shardId-000000000001');
+      return kutil.pushRecords('mstream3', _.take(records, 30)).then(function () {
+        return services.mergeShards('mstream3', 'shardId-000000000000', 'shardId-000000000001');
       }).then(function () {
-        return kutil.pushRecords('stream2', _.slice(records, 30, 60));
+        return kutil.pushRecords('mstream3', _.slice(records, 30, 60));
       }).then(function () {
         return pusher.cullPreviouslyPushedRecords(records).then(function (filtered) {
           filtered.length.should.equal(40);
