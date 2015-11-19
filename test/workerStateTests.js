@@ -5,12 +5,14 @@ var _ = require('lodash'),
     should = require('should'),
     WorkerState = require('../lib').WorkerState;
 
+var workerTable = 'TestWorkerTable';
+
 function makeWorkerState () {
-  return new WorkerState(WorkerState.DefaultTable, 'wsunit', 'shardId-000000000000');
+  return new WorkerState(workerTable, 'wsunit', 'shardId-000000000000');
 }
 
 function makeWorkerStateWithShard (shard) {
-  return new WorkerState(WorkerState.DefaultTable, 'wsunit', shard);
+  return new WorkerState(workerTable, 'wsunit', shard);
 }
 
 describe('Worker state initialization', function () {
