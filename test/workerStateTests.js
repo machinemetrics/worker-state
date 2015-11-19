@@ -1,6 +1,7 @@
 process.env['AWS_REGION'] = 'us-west-2';
 
 var _ = require('lodash'),
+    bigInt = require('big-integer'),
     should = require('should'),
     WorkerState = require('../lib').WorkerState;
 
@@ -28,6 +29,16 @@ describe('Worker state initialization', function () {
       state.checkpoint.should.equal('');
       state.state.should.be.empty();
       state.substate.should.be.empty();
+    });
+  });
+
+  it('Should initialize checkpoint equivalent to 0', function () {
+    var state = makeWorkerState();
+    return state.initialize([]).then(function () {
+      state.checkpoint.should.equal('');
+      bigInt(state.checkpoint).toString().should.equal('0');
+      state.afterCheckpoint('0').should.equal(false);
+      state.afterCheckpoint('1').should.equal(true);
     });
   });
 });
