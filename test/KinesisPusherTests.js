@@ -10,18 +10,18 @@ var _ = require('lodash'),
     DataServices = require('./util/DataServices');
 
 var services = new TestServices();
+var workerTable = 'TestWorkerTable';
 
 describe('Something', function () {
   before(function () {
     return Q.all([
-      services.initKinesis({ stream: 'stream1' }),
-      //services.initDynamo({ table: WorkerState.DefaultTable })
+      services.initKinesis({ stream: 'stream1' })
     ]);
   });
 
   it('Pushes some records of a single key', function () {
     var producer = new DataServices.RecordProducer(1);
-    var worker = new WorkerState(WorkerState.DefaultTable, 'test1', 'shardId-000000000000');
+    var worker = new WorkerState(workerTable, 'test1', 'shardId-000000000000');
     var pusher = new KinesisPusher(worker, 'stream1', services.kinesis);
 
     return pusher.pushRecords(producer.generate(100), 10).then(function () {
@@ -36,14 +36,14 @@ describe('Something', function () {
 
 });
 
-describe.only('Record Culling', function () {
+describe('Record Culling', function () {
   var worker, producer, pusher, streamName;
   var streamIndex = 0;
 
   beforeEach(function () {
     streamName = 'streamrc' + streamIndex++;
     return services.initKinesis({stream: streamName}).then(function () {
-      worker = new WorkerState(WorkerState.DefaultTable, 'testcull', 'shardId-000000000000');
+      worker = new WorkerState(workerTable, 'testcull', 'shardId-000000000000');
       pusher = new KinesisPusher(worker, streamName, services.kinesis);
       producer = new DataServices.RecordProducer(1);
     });
@@ -148,7 +148,7 @@ describe.only('Record Culling', function () {
     });
   });
 
-  it.only('Should cull some records from empty worker on merged shard', function () {
+  it('Should cull some records from empty worker on merged shard', function () {
     producer = new DataServices.RecordProducer(['alpha', 'bravo']);
     pusher = new KinesisPusher(worker, 'mstream3', services.kinesis);
 
@@ -172,6 +172,64 @@ describe.only('Record Culling', function () {
             r.Data.should.be.aboveOrEqual(60);
           });
         });
+      });
+    });
+  });
+
+  it('Should cull all records from failed worker on 1 shard', function () {
+    var records1 = producer.generate(50);
+    var records2 = producer.generate(25);
+
+    return worker.initialize([pusher.appKey()]).then(function () {
+      return pusher.pushRecords(records1, 150).then(function () {
+        return worker.flush(150);
+      });
+    }).then(function () {
+      return pusher.pushRecords(records2, 200);
+    }).then(function () {
+      return worker.initialize([pusher.appKey()]);
+    }).then(function () {
+      return pusher.pushRecords(records2, 200).then(function () {
+        return worker.flush(200);
+      });
+    }).then(function () {
+      return producer.validateStream(services.kinesis, streamName, 'shardId-000000000000').then(function (result) {
+        result.should.be.true();
+      });
+    });
+  });
+
+  it('Should cull all records from failed worker on 2 shards', function () {
+    producer = new DataServices.RecordProducer(['alpha', 'bravo']);
+    pusher = new KinesisPusher(worker, 'mstream4', services.kinesis);
+
+    var records1 = producer.generateRoundRobin(50);
+    var records2 = producer.generateRoundRobin(50);
+
+    return services.kinesis.createStream({
+      ShardCount: 2,
+      StreamName: 'mstream4'
+    }).q().delay(50).then(function () {
+      return worker.initialize([pusher.appKey()]).then(function () {
+        return pusher.pushRecords(records1, 150).then(function () {
+          return worker.flush(150);
+        });
+      });
+    }).then(function () {
+      return pusher.pushRecords(records2, 200);
+    }).then(function () {
+      return worker.initialize([pusher.appKey()]);
+    }).then(function () {
+      return pusher.pushRecords(records2, 200).then(function () {
+        return worker.flush(200);
+      });
+    }).then(function () {
+      return producer.validateStream(services.kinesis, 'mstream4', 'shardId-000000000000', { partitions: ['alpha'] }).then(function (result) {
+        result.should.be.true();
+      });
+    }).then(function () {
+      return producer.validateStream(services.kinesis, 'mstream4', 'shardId-000000000001', { partitions: ['bravo'] }).then(function (result) {
+        result.should.be.true();
       });
     });
   });
