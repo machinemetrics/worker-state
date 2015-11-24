@@ -12,7 +12,7 @@ var _ = require('lodash'),
 var services = new TestServices();
 var workerTable = 'TestWorkerTable';
 
-describe('Something', function () {
+describe('Record Pushing', function () {
   before(function () {
     return Q.all([
       services.initKinesis({ stream: 'stream1' })

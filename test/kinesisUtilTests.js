@@ -6,7 +6,7 @@ var _ = require('lodash'),
 
 var services = new TestServices();
 
-describe('Something', function () {
+describe('Kinesis Utilities', function () {
   before(function () {
     return services.initKinesis({ stream: 'stream1' });
   });
@@ -36,11 +36,11 @@ describe('Something', function () {
     var kutil = new KinesisUtil(services.kinesis);
     return services.kinesis.createStream({
       ShardCount: 2,
-      StreamName: 'stream2'
+      StreamName: 'stream3'
     }).q().delay(50).then(function () {
-      return services.splitShard('stream2', 'shardId-000000000000');
+      return services.splitShard('stream3', 'shardId-000000000000');
     }).then(function () {
-      return kutil.getShards('stream2');
+      return kutil.getShards('stream3');
     }).then(function (shards) {
       var writable = kutil.filterWriteableShards(shards);
       _.keys(shards).length.should.equal(4);
@@ -85,17 +85,25 @@ describe('Something', function () {
 });
 
 describe('Pushing Records', function () {
-  before(function () {
-    return services.initKinesis({stream: 'stream1'});
+  var streamName;
+  var streamIndex = 0;
+
+  beforeEach(function () {
+    streamName = 'streamUtilPush' + streamIndex++;
+    return services.initKinesis({stream: streamName});
+  });
+
+  afterEach(function () {
+    return services.stopKinesis();
   });
 
   it('Should push 10 records as 10 kinesis records', function () {
     var producer = new DataServices.RecordProducer(1);
     var kutil = new KinesisUtil(services.kinesis);
 
-    return kutil.pushRecords('stream1', producer.generate(10)).then(function (seqs) {
+    return kutil.pushRecords(streamName, producer.generate(10)).then(function (seqs) {
       _.keys(seqs).length.should.equal(1);
-      return producer.validateStream(services.kinesis, 'stream1', 'shardId-000000000000').then(function (result) {
+      return producer.validateStream(services.kinesis, streamName, 'shardId-000000000000').then(function (result) {
         result.should.be.true();
       });
     });
@@ -106,9 +114,9 @@ describe('Pushing Records', function () {
     var kutil = new KinesisUtil(services.kinesis);
 
     var records = kutil.groupAndPackRecords(producer.generate(10))
-    return kutil.pushRecords('stream1', records).then(function (seqs) {
+    return kutil.pushRecords(streamName, records).then(function (seqs) {
       _.keys(seqs).length.should.equal(1);
-      return producer.validateStream(services.kinesis, 'stream1', 'shardId-000000000000', { packCount: [10] }).then(function (result) {
+      return producer.validateStream(services.kinesis, streamName, 'shardId-000000000000', { packCount: [10] }).then(function (result) {
         result.should.be.true();
       });
     });
@@ -119,9 +127,9 @@ describe('Pushing Records', function () {
     var kutil = new KinesisUtil(services.kinesis);
 
     var records = kutil.groupAndPackRecords(producer.generate(250))
-    return kutil.pushRecords('stream1', records).then(function (seqs) {
+    return kutil.pushRecords(streamName, records).then(function (seqs) {
       _.keys(seqs).length.should.equal(1);
-      return producer.validateStream(services.kinesis, 'stream1', 'shardId-000000000000', { packCounts: [100, 100, 50] }).then(function (result) {
+      return producer.validateStream(services.kinesis, streamName, 'shardId-000000000000', { packCounts: [100, 100, 50] }).then(function (result) {
         result.should.be.true();
       });
     });
@@ -132,9 +140,9 @@ describe('Pushing Records', function () {
     var kutil = new KinesisUtil(services.kinesis);
 
     var records = kutil.groupAndPackRecords(producer.generateRoundRobin(10))
-    return kutil.pushRecords('stream1', records).then(function (seqs) {
+    return kutil.pushRecords(streamName, records).then(function (seqs) {
       _.keys(seqs).length.should.equal(1);
-      return producer.validateStream(services.kinesis, 'stream1', 'shardId-000000000000', { packCount: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1] }).then(function (result) {
+      return producer.validateStream(services.kinesis, streamName, 'shardId-000000000000', { packCount: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1] }).then(function (result) {
         result.should.be.true();
       });
     });
