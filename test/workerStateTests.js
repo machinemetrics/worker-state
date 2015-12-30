@@ -8,11 +8,11 @@ var _ = require('lodash'),
 var workerTable = 'TestWorkerTable';
 
 function makeWorkerState () {
-  return new WorkerState(workerTable, 'wsunit', 'shardId-000000000000');
+  return new WorkerState('wsunit', 'shardId-000000000000', workerTable);
 }
 
 function makeWorkerStateWithShard (shard) {
-  return new WorkerState(workerTable, 'wsunit', shard);
+  return new WorkerState('wsunit', shard, workerTable);
 }
 
 describe('Worker state initialization', function () {

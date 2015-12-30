@@ -21,7 +21,7 @@ describe('Record Pushing', function () {
 
   it('Pushes some records of a single key', function () {
     var producer = new DataServices.RecordProducer(1);
-    var worker = new WorkerState(workerTable, 'test1', 'shardId-000000000000');
+    var worker = new WorkerState('test1', 'shardId-000000000000', workerTable);
     var pusher = new KinesisPusher(worker, 'stream1', services.kinesis);
 
     return pusher.pushRecords(producer.generate(100), 10).then(function () {
@@ -32,8 +32,6 @@ describe('Record Pushing', function () {
       return worker.expungeAllKnownSavedState();
     });
   });
-
-
 });
 
 describe('Record Culling', function () {
@@ -43,7 +41,7 @@ describe('Record Culling', function () {
   beforeEach(function () {
     streamName = 'streamrc' + streamIndex++;
     return services.initKinesis({stream: streamName}).then(function () {
-      worker = new WorkerState(workerTable, 'testcull', 'shardId-000000000000');
+      worker = new WorkerState('testcull', 'shardId-000000000000', workerTable);
       pusher = new KinesisPusher(worker, streamName, services.kinesis);
       producer = new DataServices.RecordProducer(1);
     });
