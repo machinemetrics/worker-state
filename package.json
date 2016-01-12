@@ -19,7 +19,8 @@
     "lodash": "^3.10.1",
     "md5": "^2.0.0",
     "moment": "^2.10.6",
-    "q": "^1.4.1"
+    "q": "^1.4.1",
+    "q-repeat": "git+https://github.com/machinemetrics/q-repeat.git"
   },
   "devDependencies": {
     "dynalite": "^0.16.0",
