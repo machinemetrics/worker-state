@@ -36,7 +36,7 @@ describe('Record Pushing', function () {
   });
 });
 
-describe.only('Record Culling', function () {
+describe('Record Culling', function () {
   var worker, producer, pusher, streamName;
   var streamIndex = 0;
 
@@ -195,6 +195,34 @@ describe.only('Record Culling', function () {
     }).then(function () {
       return pusher.pushRecords(records2, 200).then(function () {
         return worker.flush(200);
+      });
+    }).then(function () {
+      return producer.validateStream(services.kinesis, streamName, 'shardId-000000000000').then(function (result) {
+        result.should.be.true();
+      });
+    });
+  });
+
+  it('Should cull all records from failed worker on 1 shard extended record set', function () {
+    var records1 = producer.generate(50);
+    var records2 = producer.generate(25);
+    var records3 = _.flatten([records2, producer.generate(25)]);
+
+    return worker.initialize([pusher.appKey()]).then(function () {
+      return pusher.pushRecords(records1, 150).then(function () {
+        return worker.flush(150);
+      });
+    }).then(function () {
+      return pusher.pushRecords(records2, 200);
+    }).then(function () {
+      worker.simulateFailure = true;
+      return worker.flush(200);
+    }).then(function () {
+      return worker.initialize([pusher.appKey()]);
+    }).then(function () {
+      return pusher.pushRecords(records3, 300).then(function () {
+        worker.simulateFailure =  false;
+        return worker.flush(300);
       });
     }).then(function () {
       return producer.validateStream(services.kinesis, streamName, 'shardId-000000000000').then(function (result) {
