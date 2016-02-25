@@ -203,7 +203,7 @@ describe('Record Culling', function () {
     });
   });
 
-  it.only('Should cull all records from failed worker on 1 shard extended record set', function () {
+  it('Should cull all records from failed worker on 1 shard extended record set', function () {
     var records1 = producer.generate(50);
     var records2 = producer.generate(25);
     var records3 = _.flatten([records2, producer.generate(25)]);

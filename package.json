@@ -15,12 +15,14 @@
     "aws-sdk": "^2.2.9",
     "aws-sdk-q": "0.0.2",
     "big-integer": "^1.6.7",
+    "bluebird": "^3.3.1",
     "dynamodb-marshaler": "^1.2.1",
     "lodash": "^3.10.1",
     "md5": "^2.0.0",
     "moment": "^2.10.6",
     "q": "^1.4.1",
-    "q-repeat": "git+https://github.com/machinemetrics/q-repeat.git"
+    "q-repeat": "git+https://github.com/machinemetrics/q-repeat.git",
+    "redis": "^2.4.2"
   },
   "devDependencies": {
     "dynalite": "^0.16.0",

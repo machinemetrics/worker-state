@@ -3,15 +3,18 @@ process.env['AWS_REGION'] = 'us-west-2';
 var _ = require('lodash'),
     bigInt = require('big-integer'),
     should = require('should'),
-    WorkerState = require('../lib').WorkerState;
+    WorkerState = require('../lib').WorkerState,
+    RedisStore = require('../lib').WorkerStores.Redis;
 
 var workerTable = 'TestWorkerTable';
 
 function makeWorkerState () {
+  var store = new RedisStore('localhost', 6379);
   return new WorkerState('wsunit', 'shardId-000000000000', workerTable);
 }
 
 function makeWorkerStateWithShard (shard) {
+  var store = new RedisStore('localhost', 6379);
   return new WorkerState('wsunit', shard, workerTable);
 }
 
@@ -106,6 +109,8 @@ describe('Primitive dynamo operations', function () {
 
   it('Should set and get primary key', function () {
     return state.writeToWorkerState('write1', null, 'prose', 'old', 1).then(function () {
+      return state.commit();
+    }).then(function () {
       return state.readFromWorkerState('write1', null, 2).then(function (item) {
         recordShouldMatch(item, 'prose', 'old', 1);
       });
@@ -114,6 +119,8 @@ describe('Primitive dynamo operations', function () {
 
   it('Should not get future-seq item', function () {
     return state.writeToWorkerState('write2', null, 'prose', 'old', 8).then(function () {
+      return state.commit();
+    }).then(function () {
       return state.readFromWorkerState('write2', null, 3).then(function (item) {
         should.not.exist(item);
       });
@@ -122,7 +129,11 @@ describe('Primitive dynamo operations', function () {
 
   it('Should delete primary key', function () {
     return state.writeToWorkerState('write3', null, 'prose', 'old', 2).then(function () {
+      return state.commit();
+    }).then(function () {
       return state.deleteFromWorkerState('write3', null).then(function () {
+        return state.commit();
+      }).then(function () {
         return state.readFromWorkerState('write3', null, 4).then(function (item) {
           should.not.exist(item);
         });
@@ -132,6 +143,8 @@ describe('Primitive dynamo operations', function () {
 
   it('Should set and get secondary key', function () {
     return state.writeToWorkerState('write4', 'sec1', 'prose', 'old', 3).then(function () {
+      return state.commit();
+    }).then(function () {
       return state.readFromWorkerState('write4', 'sec1', 4).then(function (item) {
         recordShouldMatch(item, 'prose', 'old', 3);
       });
@@ -140,7 +153,11 @@ describe('Primitive dynamo operations', function () {
 
   it('Should delete secondary key', function () {
     return state.writeToWorkerState('write5', 'sec2', 'prose', 'old', 2).then(function () {
+      return state.commit();
+    }).then(function () {
       return state.deleteFromWorkerState('write5', 'sec2').then(function () {
+        return state.commit();
+      }).then(function () {
         return state.readFromWorkerState('write5', 'sec2', 4).then(function (item) {
           should.not.exist(item);
         });
@@ -150,12 +167,17 @@ describe('Primitive dynamo operations', function () {
 
   it('Should delete mixed key', function () {
     this.timeout(10000);
+    state.initSubkeys = ['sec1', 'sec2'];
     return state.writeToWorkerState('write6', null, 'primary', 'old', 1).then(function () {
       return state.writeToWorkerState('write6', 'sec1', 'secondary', 'old', 2).then(function () {
         return state.writeToWorkerState('write6', 'sec2', 'secondary', 'old', 3);
       });
     }).then(function () {
+      return state.commit();
+    }).then(function () {
       return state.deleteAllFromWorkerState('write6');
+    }).then(function () {
+      return state.commit();
     }).then(function () {
       return state.readFromWorkerState('write6', null, 4).then(function (item) {
         should.not.exist(item);
@@ -199,7 +221,7 @@ describe('Checkpointing', function () {
       });
     }).then(function () {
       var restate = makeWorkerState();
-      return restate.initialize(['cp1-1', 'cp1-2', 'cp1-3', 'cp1-4']).then(function () {
+      return restate.initialize(['cp1-1', 'cp1-2', 'cp1-3', 'cp1-4'], ['sub1', 'sub2', 'sub3']).then(function () {
         restate.checkpoint.should.equal(5);
         itemShouldMatch(restate.state['cp1-1'], 'a', 'a', 5, false);
         itemShouldMatch(restate.state['cp1-2'], 'b', 'b', 5, false);
@@ -222,7 +244,7 @@ describe('Checkpointing', function () {
       });
     }).then(function () {
       var terstate = makeWorkerState();
-      return terstate.initialize(['cp1-1', 'cp1-2', 'cp1-3', 'cp1-4']).then(function () {
+      return terstate.initialize(['cp1-1', 'cp1-2', 'cp1-3', 'cp1-4'], ['sub1', 'sub2', 'sub3']).then(function () {
         terstate.checkpoint.should.equal(10);
         itemShouldMatch(terstate.state['cp1-1'], 'a', 'a', 5, false);
         itemShouldMatch(terstate.state['cp1-2'], 'g', 'g', 10, false);
@@ -254,7 +276,7 @@ describe('Checkpointing', function () {
       return state.flush(5);
     }).then(function () {
       var restate = makeWorkerState();
-      return restate.initialize(['cp2-1', 'cp2-2', 'cp2-3']).then(function () {
+      return restate.initialize(['cp2-1', 'cp2-2', 'cp2-3'], ['sub1', 'sub2']).then(function () {
         restate.checkpoint.should.equal('');
         _.keys(restate.state).length.should.equal(0);
         _.keys(restate.substate).length.should.equal(0);
@@ -284,7 +306,7 @@ describe('Checkpointing', function () {
       return state.flush(5);
     }).then(function () {
       var restate = makeWorkerState();
-      return restate.initialize(['cp3-1', 'cp3-2', 'cp3-3', 'cp3-4']).then(function () {
+      return restate.initialize(['cp3-1', 'cp3-2', 'cp3-3', 'cp3-4'], ['sub1', 'sub2', 'sub3']).then(function () {
         restate.checkpoint.should.equal(5);
 
         restate.setValue('cp3-1', 'i');
@@ -304,7 +326,7 @@ describe('Checkpointing', function () {
       });
     }).then(function () {
       var terstate = makeWorkerState();
-      return terstate.initialize(['cp3-1', 'cp3-2', 'cp3-3', 'cp3-4']).then(function () {
+      return terstate.initialize(['cp3-1', 'cp3-2', 'cp3-3', 'cp3-4'], ['sub1', 'sub2', 'sub3']).then(function () {
         terstate.checkpoint.should.equal(5);
         itemShouldMatch(terstate.state['cp3-1'], 'a', 'a', 5, false);
         itemShouldMatch(terstate.state['cp3-2'], 'b', 'b', 5, false);
@@ -333,7 +355,7 @@ describe('Shard splitting', function () {
       state1.setSubValue('key3', 'sub2', 'd');
       return state1.flush(5);
     }).then(function () {
-      return state2.initialize(['key1', 'key2', 'key3']);
+      return state2.initialize(['key1', 'key2', 'key3'], ['sub1', 'sub2']);
     }).then(function () {
       return state2.splitShard(state1.shard);
     }).then(function () {
@@ -344,7 +366,7 @@ describe('Shard splitting', function () {
       itemShouldMatch(state2.substate.key3.sub2, 'd', 'd', 5, false);
 
       state1 = makeWorkerStateWithShard('shardId-000000000004');
-      return state1.initialize(['key1', 'key2', 'key3']);
+      return state1.initialize(['key1', 'key2', 'key3'], ['sub1', 'sub2']);
     }).then(function () {
       state1.checkpoint.should.equal(5);
       itemShouldMatch(state1.state.key1, 'a', 'a', 5, false);
@@ -352,7 +374,7 @@ describe('Shard splitting', function () {
       itemShouldMatch(state1.substate.key3.sub1, 'c', 'c', 5, false);
       itemShouldMatch(state1.substate.key3.sub2, 'd', 'd', 5, false);
 
-      return state3.initialize(['key1', 'key2', 'key3']);
+      return state3.initialize(['key1', 'key2', 'key3'], ['sub1', 'sub2']);
     }).then(function () {
       return state3.splitShard(state1.shard);
     }).then(function () {
@@ -363,7 +385,7 @@ describe('Shard splitting', function () {
       itemShouldMatch(state3.substate.key3.sub2, 'd', 'd', 5, false);
 
       state1 = makeWorkerStateWithShard('shardId-000000000004');
-      return state1.initialize(['key1', 'key2', 'key3']);
+      return state1.initialize(['key1', 'key2', 'key3'], ['sub1', 'sub2']);
     }).then(function () {
       state1.checkpoint.should.equal('');
       _.keys(state1.state).length.should.equal(0);
@@ -400,7 +422,7 @@ describe('Shard merging', function () {
         return state2.flush(10);
       });
     }).then(function () {
-      return state3.initialize(['key1', 'key2', 'key3', 'key4', 'key5', 'key6']);
+      return state3.initialize(['key1', 'key2', 'key3', 'key4', 'key5', 'key6'], ['sub1', 'sub2', 'sub3']);
     }).then(function () {
       return state3.mergeShards(state1.shard, state2.shard);
     }).then(function () {
@@ -415,14 +437,14 @@ describe('Shard merging', function () {
       itemShouldMatch(state3.substate.key6.sub1, 'h', 'h', 10, false);
 
       state1 = makeWorkerStateWithShard('shardId-000000000001');
-      return state1.initialize(['key1', 'key2', 'key3', 'key4']);
+      return state1.initialize(['key1', 'key2', 'key3', 'key4'], ['sub1', 'sub2', 'sub3']);
     }).then(function () {
       state1.checkpoint.should.equal('');
       _.keys(state1.state).length.should.equal(0);
       _.keys(state1.substate).length.should.equal(0);
 
       state2 = makeWorkerStateWithShard('shardId-000000000002');
-      return state2.initialize(['key1', 'key4', 'key5', 'key6']);
+      return state2.initialize(['key1', 'key4', 'key5', 'key6'], ['sub1', 'sub2', 'sub3']);
     }).then(function () {
       state2.checkpoint.should.equal('');
       _.keys(state2.state).length.should.equal(0);
