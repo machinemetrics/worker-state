@@ -9,13 +9,21 @@ var _ = require('lodash'),
 var workerTable = 'TestWorkerTable';
 
 function makeWorkerState () {
-  var store = new RedisStore('localhost', 6379);
   return new WorkerState('wsunit', 'shardId-000000000000', workerTable);
 }
 
-function makeWorkerStateWithShard (shard) {
+function makeRedisWorkerState () {
   var store = new RedisStore('localhost', 6379);
+  return new WorkerState('wsunit', 'shardId-000000000000', store);
+}
+
+function makeWorkerStateWithShard (shard) {
   return new WorkerState('wsunit', shard, workerTable);
+}
+
+function makeRedisWorkerStateWithShard (shard) {
+  var store = new RedisStore('localhost', 6379);
+  return new WorkerState('wsunit', shard, store);
 }
 
 describe('Worker state initialization', function () {
@@ -98,7 +106,7 @@ describe('Worker state basic set and get', function () {
   });
 });
 
-describe('Primitive dynamo operations', function () {
+describe('Primitive dynamo store operations', function () {
   var state;
   before(function (done) {
     state = makeWorkerState();
@@ -108,6 +116,80 @@ describe('Primitive dynamo operations', function () {
   });
 
   it('Should set and get primary key', function () {
+    return PrimitiveOpTests.setGetPrimaryKey(state);
+  });
+
+  it('Should not get future-seq item', function () {
+    return PrimitiveOpTests.noGetFutureSeq(state);
+  });
+
+  it('Should delete primary key', function () {
+    return PrimitiveOpTests.deletePrimaryKey(state);
+  });
+
+  it('Should set and get secondary key', function () {
+    return PrimitiveOpTests.setGetSecondaryKey(state);
+  });
+
+  it('Should delete secondary key', function () {
+    return PrimitiveOpTests.deleteSecondaryKey(state);
+  });
+
+  it('Should delete mixed key', function () {
+    this.timeout(10000);
+    return PrimitiveOpTests.deleteMixedKey(state);
+  });
+
+  after(function (done) {
+    state.expungeAllKnownSavedState().then(function () {
+      done();
+    }).done(null, done);
+  });
+});
+
+describe('Primitive redis store operations', function () {
+  var state;
+  before(function (done) {
+    state = makeRedisWorkerState();
+    state.initialize(['write1', 'write2', 'write3', 'write4', 'write5', 'write6']).then(function () {
+      done();
+    }).done(null, done);
+  });
+
+  it('Should set and get primary key', function () {
+    return PrimitiveOpTests.setGetPrimaryKey(state);
+  });
+
+  it('Should not get future-seq item', function () {
+    return PrimitiveOpTests.noGetFutureSeq(state);
+  });
+
+  it('Should delete primary key', function () {
+    return PrimitiveOpTests.deletePrimaryKey(state);
+  });
+
+  it('Should set and get secondary key', function () {
+    return PrimitiveOpTests.setGetSecondaryKey(state);
+  });
+
+  it('Should delete secondary key', function () {
+    return PrimitiveOpTests.deleteSecondaryKey(state);
+  });
+
+  it('Should delete mixed key', function () {
+    this.timeout(10000);
+    return PrimitiveOpTests.deleteMixedKey(state);
+  });
+
+  after(function (done) {
+    state.expungeAllKnownSavedState().then(function () {
+      done();
+    }).done(null, done);
+  });
+});
+
+var PrimitiveOpTests = {
+  setGetPrimaryKey: function (state) {
     return state.writeToWorkerState('write1', null, 'prose', 'old', 1).then(function () {
       return state.commit();
     }).then(function () {
@@ -115,9 +197,9 @@ describe('Primitive dynamo operations', function () {
         recordShouldMatch(item, 'prose', 'old', 1);
       });
     });
-  });
+  },
 
-  it('Should not get future-seq item', function () {
+  noGetFutureSeq: function (state) {
     return state.writeToWorkerState('write2', null, 'prose', 'old', 8).then(function () {
       return state.commit();
     }).then(function () {
@@ -125,9 +207,9 @@ describe('Primitive dynamo operations', function () {
         should.not.exist(item);
       });
     });
-  });
+  },
 
-  it('Should delete primary key', function () {
+  deletePrimaryKey: function (state) {
     return state.writeToWorkerState('write3', null, 'prose', 'old', 2).then(function () {
       return state.commit();
     }).then(function () {
@@ -139,9 +221,9 @@ describe('Primitive dynamo operations', function () {
         });
       });
     });
-  });
+  },
 
-  it('Should set and get secondary key', function () {
+  setGetSecondaryKey: function (state) {
     return state.writeToWorkerState('write4', 'sec1', 'prose', 'old', 3).then(function () {
       return state.commit();
     }).then(function () {
@@ -149,9 +231,9 @@ describe('Primitive dynamo operations', function () {
         recordShouldMatch(item, 'prose', 'old', 3);
       });
     });
-  });
+  },
 
-  it('Should delete secondary key', function () {
+  deleteSecondaryKey: function (state) {
     return state.writeToWorkerState('write5', 'sec2', 'prose', 'old', 2).then(function () {
       return state.commit();
     }).then(function () {
@@ -163,10 +245,9 @@ describe('Primitive dynamo operations', function () {
         });
       });
     });
-  });
+  },
 
-  it('Should delete mixed key', function () {
-    this.timeout(10000);
+  deleteMixedKey: function (state) {
     state.initSubkeys = ['sec1', 'sec2'];
     return state.writeToWorkerState('write6', null, 'primary', 'old', 1).then(function () {
       return state.writeToWorkerState('write6', 'sec1', 'secondary', 'old', 2).then(function () {
@@ -189,18 +270,45 @@ describe('Primitive dynamo operations', function () {
         });
       });
     })
+  }
+};
+
+describe.only('Checkpointing dynamo store', function () {
+  it('Should checkpoint from blank and existing state', function () {
+    this.timeout(30000);
+    return CheckpointTests.checkpointBlankExisting(makeWorkerState);
   });
 
-  after(function (done) {
-    state.expungeAllKnownSavedState().then(function () {
-      done();
-    }).done(null, done);
+  it('Should roll back in checkpoint fail from blank', function () {
+    this.timeout(30000);
+    return CheckpointTests.rollbackCheckpointFailBlank(makeWorkerState);
+  });
+
+  it('Should roll back in checkpoint fail from existing', function () {
+    this.timeout(30000);
+    return CheckpointTests.rollbackCheckpointFailExisting(makeWorkerState);
   });
 });
 
-describe('Checkpointing', function () {
+describe('Checkpointing redis store', function () {
   it('Should checkpoint from blank and existing state', function () {
     this.timeout(30000);
+    return CheckpointTests.checkpointBlankExisting(makeRedisWorkerState);
+  });
+
+  it('Should roll back in checkpoint fail from blank', function () {
+    this.timeout(30000);
+    return CheckpointTests.rollbackCheckpointFailBlank(makeRedisWorkerState);
+  });
+
+  it('Should roll back in checkpoint fail from existing', function () {
+    this.timeout(30000);
+    return CheckpointTests.rollbackCheckpointFailExisting(makeRedisWorkerState);
+  });
+});
+
+var CheckpointTests = {
+  checkpointBlankExisting: function (makeWorkerState) {
     var state = makeWorkerState();
     return state.initialize([]).then(function () {
       state.checkpoint.should.equal('');
@@ -257,10 +365,9 @@ describe('Checkpointing', function () {
     }).then(function () {
       return state.expungeAllKnownSavedState();
     });
-  });
+  },
 
-  it('Should roll back in checkpoint fail from blank', function () {
-    this.timeout(30000);
+  rollbackCheckpointFailBlank: function (makeWorkerState) {
     var state = makeWorkerState();
     return state.initialize([]).then(function () {
       state.checkpoint.should.equal('');
@@ -289,10 +396,9 @@ describe('Checkpointing', function () {
     }).then(function () {
       return state.expungeAllKnownSavedState();
     });
-  });
+  },
 
-  it('Should roll back in checkpoint fail from existing', function () {
-    this.timeout(30000);
+  rollbackCheckpointFailExisting: function (makeWorkerState) {
     var state = makeWorkerState();
     return state.initialize([]).then(function () {
       state.checkpoint.should.equal('');
@@ -338,12 +444,25 @@ describe('Checkpointing', function () {
     }).then(function () {
       return state.expungeAllKnownSavedState();
     });
+  }
+};
+
+describe('Shard splitting dynamo store', function () {
+  it('Should split shard to 2 children and delete parent', function () {
+    this.timeout(30000);
+    return SplittingTests.basicSplit(makeWorkerStateWithShard);
   });
 });
 
-describe('Shard splitting', function () {
+describe('Shard splitting redis store', function () {
   it('Should split shard to 2 children and delete parent', function () {
     this.timeout(30000);
+    return SplittingTests.basicSplit(makeRedisWorkerStateWithShard);
+  });
+});
+
+var SplittingTests = {
+  basicSplit: function (makeWorkerStateWithShard) {
     var state1 = makeWorkerStateWithShard('shardId-000000000004');
     var state2 = makeWorkerStateWithShard('shardId-000000000005');
     var state3 = makeWorkerStateWithShard('shardId-000000000006');
@@ -395,12 +514,25 @@ describe('Shard splitting', function () {
     }).then(function () {
       return state3.expungeAllKnownSavedState();
     });
+  }
+};
+
+describe('Shard merging dynamo store', function () {
+  it('Should merge and delete parent shards', function () {
+    this.timeout(30000);
+    return MergingTests.basicMerge(makeWorkerStateWithShard);
   });
 });
 
-describe('Shard merging', function () {
+describe('Shard merging redis store', function () {
   it('Should merge and delete parent shards', function () {
     this.timeout(30000);
+    return MergingTests.basicMerge(makeRedisWorkerStateWithShard);
+  });
+});
+
+var MergingTests = {
+  basicMerge: function (makeWorkerStateWithShard) {
     var state1 = makeWorkerStateWithShard('shardId-000000000001');
     var state2 = makeWorkerStateWithShard('shardId-000000000002');
     var state3 = makeWorkerStateWithShard('shardId-000000000003');
@@ -452,8 +584,8 @@ describe('Shard merging', function () {
 
       return state3.expungeAllKnownSavedState();
     });
-  });
-});
+  }
+};
 
 function recordShouldMatch (item, value, previous, sequence) {
   undefEqual(item.value, value);
