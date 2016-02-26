@@ -273,7 +273,7 @@ var PrimitiveOpTests = {
   }
 };
 
-describe.only('Checkpointing dynamo store', function () {
+describe('Checkpointing dynamo store', function () {
   it('Should checkpoint from blank and existing state', function () {
     this.timeout(30000);
     return CheckpointTests.checkpointBlankExisting(makeWorkerState);
