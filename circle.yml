@@ -15,7 +15,7 @@ test:
     - npm install -g eslint-config-airbnb@12.0.0
     - npm install -g eslint-plugin-import@1.16.0
     - npm install -g eslint-plugin-jsx-a11y@2.2.3
-    - npm install -g eslint-react@6.4.1
+    - npm install -g eslint-plugin-react@6.4.1
     - npm install -g istanbul@0.4.5
   post:
     - mv coverage $CIRCLE_ARTIFACTS
