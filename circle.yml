@@ -1,0 +1,14 @@
+machine:
+  environment:
+    config: test
+    PATH: ./node_modules/.bin/:$PATH
+  timezone:
+    UTC
+  node:
+    version: 4.3.0
+  services:
+    - redis
+
+test:
+  post:
+    - mv coverage $CIRCLE_ARTIFACTS
