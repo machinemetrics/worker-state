@@ -1,7 +1,7 @@
-var _ = require('lodash'),
-    async = require('async-q'),
-    md5 = require('md5'),
-    KinesisUtil = require('../../lib/kinesisUtil');
+const _ = require('lodash');
+const async = require('async-q');
+const md5 = require('md5');
+const KinesisUtil = require('../../lib/kinesisUtil');
 
 function RecordProducer(partitionCount) {
   if (_.isArray(partitionCount))
@@ -65,7 +65,7 @@ RecordProducer.prototype.validateStream = function (kinesis, stream, shard, opti
     var iterator = data.ShardIterator;
 
     return async.whilst(function () {
-      return  iterator && iterator.length > 0;
+      return iterator && iterator.length > 0;
     }, function () {
       return kinesis.getRecords({
         ShardIterator: iterator,

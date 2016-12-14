@@ -1,14 +1,14 @@
-process.env['AWS_REGION'] = 'us-west-2';
+process.env.AWS_REGION = 'us-west-2';
 
 const _ = require('lodash');
 const Q = require('q');
-const should = require('should');
 const KinesisPusher = require('../lib').KinesisPusher;
 const KinesisUtil = require('../lib/kinesisUtil');
 const WorkerState = require('../lib').WorkerState;
 const WorkerLogger = require('../lib').Logger;
 const TestServices = require('./util/TestServices');
 const DataServices = require('./util/DataServices');
+require('should');
 
 var services = new TestServices();
 var workerTable = 'TestWorkerTable';
@@ -37,7 +37,10 @@ describe('Record Pushing', function () {
 });
 
 describe('Record Culling', function () {
-  var worker, producer, pusher, streamName;
+  var worker;
+  var producer;
+  var pusher;
+  var streamName;
   var streamIndex = 0;
 
   beforeEach(function () {
@@ -61,7 +64,7 @@ describe('Record Culling', function () {
     var kutil = new KinesisUtil(services.kinesis);
     var records = producer.generate(100);
 
-    return kutil.pushRecords(streamName, records).then(function (maxSeqs) {
+    return kutil.pushRecords(streamName, records).then(function (maxSeqs) { // eslint-disable-line no-unused-vars
       return pusher.cullPreviouslyPushedRecords(records).then(function (filtered) {
         filtered.length.should.equal(0);
       });
@@ -72,7 +75,7 @@ describe('Record Culling', function () {
     var kutil = new KinesisUtil(services.kinesis);
     var records = producer.generate(100);
 
-    return kutil.pushRecords(streamName, _.take(records, 50)).then(function (maxSeqs) {
+    return kutil.pushRecords(streamName, _.take(records, 50)).then(function (maxSeqs) { // eslint-disable-line no-unused-vars
       return pusher.cullPreviouslyPushedRecords(records).then(function (filtered) {
         filtered.length.should.equal(50);
         _.each(filtered, function (r) {

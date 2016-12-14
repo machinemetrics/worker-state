@@ -9,9 +9,9 @@ const http = require('http');
 AWS.config.update({
   s3ForcePathStyle: true,
   sslEnabled: false,
-  region: process.env['AWS_REGION'],
-  accessKeyId: process.env['AWS_ACCESS_KEY_ID'],
-  secretAccessKey: process.env['AWS_SECRET_ACCESS_KEY'],
+  region: process.env.AWS_REGION,
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
 });
 
 function TestServices() {}
@@ -35,8 +35,9 @@ TestServices.prototype.initKinesis = function (cfg) {
   });
   var port = TestServices.NextPort();
   self.kinesaliteServer.listen(port, function (err) {
-    if(err)
+    if (err) {
       return deferred.reject(err);
+    }
 
     AWS.config.httpOptions = { agent: http.globalAgent };
     self.kinesis = new AWS.Kinesis({ endpoint: `http://localhost:${port}` });
@@ -167,7 +168,7 @@ TestServices.prototype.mergeShards = function (streamName, shardId1, shardId2) {
       StreamName: streamName,
     }).q().then(function (res) {
       return _(res.StreamDescription.Shards).find(function (shard) {
-        return shard.AdjacentParentShardId = shardId2 && shard.ParentShardId == shardId1;
+        return shard.AdjacentParentShardId = shardId2 && shard.ParentShardId === shardId1;
       }).ShardId;
     });
   });
@@ -180,7 +181,7 @@ function averageMD5(hash1, hash2) {
 function parseHashKey(hash) {
   // A hack to get around (Kinesalite?) setting hashes in e+ format after a split.  It still contains all the digits.
   if (hash.indexOf('e+') > -1) {
-    var exp = parseInt(hash.match(/e\+(\d+)/)[1]);
+    var exp = parseInt(hash.match(/e\+(\d+)/)[1], 10);
     hash = _.padRight(hash.replace(/\.|e\+\d+/g, ''), exp + 1, 0);
   }
 

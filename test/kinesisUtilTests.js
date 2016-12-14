@@ -113,7 +113,7 @@ describe('Pushing Records', function () {
     var producer = new DataServices.RecordProducer(1);
     var kutil = new KinesisUtil(services.kinesis);
 
-    var records = kutil.groupAndPackRecords(producer.generate(10))
+    var records = kutil.groupAndPackRecords(producer.generate(10));
     return kutil.pushRecords(streamName, records).then(function (seqs) {
       _.keys(seqs).length.should.equal(1);
       return producer.validateStream(services.kinesis, streamName, 'shardId-000000000000', { packCount: [10] }).then(function (result) {
@@ -126,7 +126,7 @@ describe('Pushing Records', function () {
     var producer = new DataServices.RecordProducer(1);
     var kutil = new KinesisUtil(services.kinesis);
 
-    var records = kutil.groupAndPackRecords(producer.generate(250))
+    var records = kutil.groupAndPackRecords(producer.generate(250));
     return kutil.pushRecords(streamName, records).then(function (seqs) {
       _.keys(seqs).length.should.equal(1);
       return producer.validateStream(services.kinesis, streamName, 'shardId-000000000000', { packCounts: [100, 100, 50] }).then(function (result) {
@@ -139,7 +139,7 @@ describe('Pushing Records', function () {
     var producer = new DataServices.RecordProducer(10);
     var kutil = new KinesisUtil(services.kinesis);
 
-    var records = kutil.groupAndPackRecords(producer.generateRoundRobin(10))
+    var records = kutil.groupAndPackRecords(producer.generateRoundRobin(10));
     return kutil.pushRecords(streamName, records).then(function (seqs) {
       _.keys(seqs).length.should.equal(1);
       return producer.validateStream(services.kinesis, streamName, 'shardId-000000000000', { packCount: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1] }).then(function (result) {
