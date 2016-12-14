@@ -168,7 +168,7 @@ TestServices.prototype.mergeShards = function (streamName, shardId1, shardId2) {
       StreamName: streamName,
     }).q().then(function (res) {
       return _(res.StreamDescription.Shards).find(function (shard) {
-        return shard.AdjacentParentShardId = shardId2 && shard.ParentShardId === shardId1;
+        return shard.AdjacentParentShardId === shardId2 && shard.ParentShardId === shardId1;
       }).ShardId;
     });
   });
