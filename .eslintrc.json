@@ -1,0 +1,59 @@
+{
+  "rules": {
+    "array-callback-return": [ "warn" ],
+    "default-case": [ "warn" ],
+    "keyword-spacing": [ "warn" ],
+    "no-empty": [ "warn" ],
+    "no-multi-spaces": [ "warn" ],
+    "no-return-assign": [ "warn" ],
+    "no-trailing-spaces": [ "warn" ],
+    "quotes": [ "warn" ],
+    "wrap-iife": [ "warn" ],
+    "no-mixed-operators": [ "warn" ],
+    "radix": [ "warn" ],
+    "one-var-declaration-per-line": [ "warn" ],
+    "brace-style": [ "warn" ],
+    "block-scoped-var": [ "warn" ],
+    "dot-notation": [ "warn" ],
+    "object-curly-spacing": [ "warn" ],
+    "semi": [ "warn" ],
+    "no-plusplus": [ "warn" ],
+    "no-unused-vars": [ "warn" ],
+    "eol-last": [ "warn" ],
+    "no-shadow": [ "warn" ],
+    "eqeqeq": [ "warn" ],
+    "one-var": [ "warn" ],
+    "space-before-function-paren": [ "warn" ],
+    "indent": [ "warn" ],
+    "comma-dangle": [ "warn" ],
+
+    "object-shorthand": [ "off" ],
+    "vars-on-top": [ "off" ],
+
+    "prefer-spread": [ "off" ],
+    "consistent-return": [ "off" ],
+    "curly": [ "off" ],
+
+    "no-param-reassign": [ "off" ],
+    "no-console": [ "off" ],
+    "max-len": [ "off" ],
+    "strict": [ "off" ],
+    "import/no-extraneous-dependencies": [ "off" ],
+    "newline-per-chained-call": [ "off" ],
+    "no-use-before-define": [ "off" ],
+    "prefer-template": [ "off" ],
+
+    "arrow-body-style": [ "off" ],
+    "prefer-arrow-callback": [ "off" ],
+    "func-names": [ "off" ],
+    "new-cap": [ "off" ],
+    "no-else-return": [ "off" ],
+    "no-var": [ "off" ]
+  },
+  "extends": "airbnb",
+  "plugins": [
+    "react",
+    "jsx-a11y",
+    "import"
+  ]
+}

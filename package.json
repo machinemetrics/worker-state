@@ -5,7 +5,9 @@
   "version": "0.1.0",
   "main": "lib",
   "scripts": {
-    "test": "mocha test"
+    "test": "npm run lint && npm run cover",
+    "lint": "eslint --max-warnings 287 .",
+    "cover": "istanbul cover _mocha test -- -t 10000"
   },
   "repository": {
     "type": "git",
