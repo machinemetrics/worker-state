@@ -4,6 +4,7 @@ const bigInt = require('big-integer');
 const kinesalite = require('kinesalite');
 const dynalite = require('dynalite');
 const AWS = require('aws-sdk-q');
+const http = require('http');
 
 AWS.config.update({
   s3ForcePathStyle: true,
@@ -37,6 +38,7 @@ TestServices.prototype.initKinesis = function(cfg) {
     if(err)
       return deferred.reject(err);
 
+    AWS.config.httpOptions = { agent: http.globalAgent };
     self.kinesis = new AWS.Kinesis({ endpoint: `http://localhost:${port}` });
 
     deferred.resolve(self.ensureStream(cfg.stream));
