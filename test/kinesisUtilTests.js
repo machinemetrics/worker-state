@@ -1,8 +1,8 @@
-var _ = require('lodash'),
-    should = require('should'),
-    KinesisUtil = require('../lib/kinesisUtil'),
-    TestServices = require('./util/TestServices'),
-    DataServices = require('./util/DataServices');
+const _ = require('lodash');
+const should = require('should');
+const KinesisUtil = require('../lib/kinesisUtil');
+const TestServices = require('./util/TestServices');
+const DataServices = require('./util/DataServices');
 
 var services = new TestServices();
 

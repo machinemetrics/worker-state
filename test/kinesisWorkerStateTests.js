@@ -1,17 +1,16 @@
-process.env['AWS_REGION'] = 'us-west-2';
+process.env.AWS_REGION = 'us-west-2';
 
-var _ = require('lodash'),
-    Q = require('q'),
-    should = require('should'),
-    WorkerState = require('../lib').KinesisWorkerState,
-    TestServices = require('./util/TestServices');
+const Q = require('q');
+const WorkerState = require('../lib').KinesisWorkerState;
+const TestServices = require('./util/TestServices');
+require('should');
 
 var services = new TestServices();
 
 describe('Parent resolution', function () {
   before(function () {
     return Q.all([
-      services.initKinesis({ stream: 'kwsstream1' })
+      services.initKinesis({ stream: 'kwsstream1' }),
     ]);
   });
 

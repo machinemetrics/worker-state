@@ -1,10 +1,10 @@
-process.env['AWS_REGION'] = 'us-west-2';
+process.env.AWS_REGION = 'us-west-2';
 
-var _ = require('lodash'),
-    bigInt = require('big-integer'),
-    should = require('should'),
-    WorkerState = require('../lib').WorkerState,
-    RedisStore = require('../lib').WorkerStores.Redis;
+const _ = require('lodash');
+const bigInt = require('big-integer');
+const should = require('should');
+const WorkerState = require('../lib').WorkerState;
+const RedisStore = require('../lib').WorkerStores.Redis;
 
 var workerTable = 'TestWorkerTable';
 

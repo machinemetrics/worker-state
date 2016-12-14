@@ -1,14 +1,14 @@
 process.env['AWS_REGION'] = 'us-west-2';
 
-var _ = require('lodash'),
-    Q = require('q'),
-    should = require('should'),
-    KinesisPusher = require('../lib').KinesisPusher,
-    KinesisUtil = require('../lib/kinesisUtil'),
-    WorkerState = require('../lib').WorkerState,
-    WorkerLogger = require('../lib').Logger,
-    TestServices = require('./util/TestServices'),
-    DataServices = require('./util/DataServices');
+const _ = require('lodash');
+const Q = require('q');
+const should = require('should');
+const KinesisPusher = require('../lib').KinesisPusher;
+const KinesisUtil = require('../lib/kinesisUtil');
+const WorkerState = require('../lib').WorkerState;
+const WorkerLogger = require('../lib').Logger;
+const TestServices = require('./util/TestServices');
+const DataServices = require('./util/DataServices');
 
 var services = new TestServices();
 var workerTable = 'TestWorkerTable';
