@@ -1,9 +1,9 @@
-var Q = require('q'),
-    _ = require('lodash'),
-    bigInt = require('big-integer'),
-    kinesalite = require('kinesalite'),
-    dynalite = require('dynalite'),
-    AWS = require('aws-sdk-q');
+const Q = require('q');
+const _ = require('lodash');
+const bigInt = require('big-integer');
+const kinesalite = require('kinesalite');
+const dynalite = require('dynalite');
+const AWS = require('aws-sdk-q');
 
 AWS.config.update({
   s3ForcePathStyle: true,
@@ -30,14 +30,14 @@ TestServices.prototype.initKinesis = function(cfg) {
     createStreamMs: 25,
     deleteStreamMs: 25,
     updateStreamMs: 25,
-    shardLimit: 1000
+    shardLimit: 1000,
   });
   var port = TestServices.NextPort();
   self.kinesaliteServer.listen(port, function(err) {
     if(err)
       return deferred.reject(err);
 
-    self.kinesis = new AWS.Kinesis({ endpoint: 'localhost:' + port });
+    self.kinesis = new AWS.Kinesis({ endpoint: `http://localhost:${port}` });
 
     deferred.resolve(self.ensureStream(cfg.stream));
   });
@@ -83,7 +83,7 @@ TestServices.prototype.initDynamo = function(cfg) {
 TestServices.prototype.ensureStream = function(streamName) {
   var self = this;
 
-  return this.kinesis.listStreams().q().then(function (data) {
+  return self.kinesis.listStreams().q().then(function (data) {
     if (!_.contains(data.StreamNames, streamName)) {
       return self.kinesis.createStream({
         ShardCount: 1,
