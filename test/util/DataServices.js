@@ -3,7 +3,7 @@ var _ = require('lodash'),
     md5 = require('md5'),
     KinesisUtil = require('../../lib/kinesisUtil');
 
-function RecordProducer (partitionCount) {
+function RecordProducer(partitionCount) {
   if (_.isArray(partitionCount))
     this.partitions = partitionCount;
   else {
@@ -21,7 +21,7 @@ RecordProducer.prototype.generate = function (count) {
   var recordSet = _.times(count, function () {
     return {
       PartitionKey: _.sample(self.partitions),
-      Data: self.index++
+      Data: self.index++,
     };
   });
 
@@ -37,7 +37,7 @@ RecordProducer.prototype.generateRoundRobin = function (count) {
       pIndex = 0;
     return {
       PartitionKey: self.partitions[pIndex++],
-      Data: self.index++
+      Data: self.index++,
     };
   });
 
@@ -51,7 +51,7 @@ RecordProducer.prototype.validateStream = function (kinesis, stream, shard, opti
   var iteratorParams = {
     ShardId: shard,
     ShardIteratorType: 'TRIM_HORIZON',
-    StreamName: stream
+    StreamName: stream,
   };
 
   options = options || {};
@@ -68,7 +68,7 @@ RecordProducer.prototype.validateStream = function (kinesis, stream, shard, opti
       return  iterator && iterator.length > 0;
     }, function () {
       return kinesis.getRecords({
-        ShardIterator: iterator
+        ShardIterator: iterator,
       }).q().then(function (data) {
         iterator = data.NextShardIterator;
         if (_.isEmpty(data.Records))
@@ -117,5 +117,5 @@ RecordProducer.prototype.validateStream = function (kinesis, stream, shard, opti
 };
 
 module.exports = {
-  RecordProducer: RecordProducer
+  RecordProducer: RecordProducer,
 };

@@ -8,20 +8,20 @@ const RedisStore = require('../lib').WorkerStores.Redis;
 
 var workerTable = 'TestWorkerTable';
 
-function makeWorkerState () {
+function makeWorkerState() {
   return new WorkerState('wsunit', 'shardId-000000000000', workerTable);
 }
 
-function makeRedisWorkerState () {
+function makeRedisWorkerState() {
   var store = new RedisStore('localhost', 6379);
   return new WorkerState('wsunit', 'shardId-000000000000', store);
 }
 
-function makeWorkerStateWithShard (shard) {
+function makeWorkerStateWithShard(shard) {
   return new WorkerState('wsunit', shard, workerTable);
 }
 
-function makeRedisWorkerStateWithShard (shard) {
+function makeRedisWorkerStateWithShard(shard) {
   var store = new RedisStore('localhost', 6379);
   return new WorkerState('wsunit', shard, store);
 }
@@ -270,7 +270,7 @@ var PrimitiveOpTests = {
         });
       });
     })
-  }
+  },
 };
 
 describe('Checkpointing dynamo store', function () {
@@ -444,7 +444,7 @@ var CheckpointTests = {
     }).then(function () {
       return state.expungeAllKnownSavedState();
     });
-  }
+  },
 };
 
 describe('Shard splitting dynamo store', function () {
@@ -514,7 +514,7 @@ var SplittingTests = {
     }).then(function () {
       return state3.expungeAllKnownSavedState();
     });
-  }
+  },
 };
 
 describe('Shard merging dynamo store', function () {
@@ -584,23 +584,23 @@ var MergingTests = {
 
       return state3.expungeAllKnownSavedState();
     });
-  }
+  },
 };
 
-function recordShouldMatch (item, value, previous, sequence) {
+function recordShouldMatch(item, value, previous, sequence) {
   undefEqual(item.value, value);
   undefEqual(item.previous, previous);
   undefEqual(item.sequence, sequence);
 }
 
-function itemShouldMatch (item, value, previous, sequence, modified) {
+function itemShouldMatch(item, value, previous, sequence, modified) {
   undefEqual(item.value, value);
   undefEqual(item.previous, previous);
   undefEqual(item.sequence, sequence);
   undefEqual(item.modified, modified);
 }
 
-function undefEqual (a, b) {
+function undefEqual(a, b) {
   if (_.isUndefined(a) || _.isUndefined(b))
     return (_.isUndefined(a) && _.isUndefined(b));
   return should.equal(a, b);

@@ -17,7 +17,7 @@ var loggerTable = 'WorkerStateLog';
 describe('Record Pushing', function () {
   before(function () {
     return Q.all([
-      services.initKinesis({ stream: 'stream1' })
+      services.initKinesis({ stream: 'stream1' }),
     ]);
   });
 
@@ -53,7 +53,7 @@ describe('Record Culling', function () {
   afterEach(function () {
     return Q.all([
       worker.expungeAllKnownSavedState(),
-      services.stopKinesis()
+      services.stopKinesis(),
     ]);
   });
 
@@ -92,7 +92,7 @@ describe('Record Culling', function () {
 
     return services.kinesis.createStream({
       ShardCount: 2,
-      StreamName: 'mstream1'
+      StreamName: 'mstream1',
     }).q().delay(50).then(function () {
       return kutil.pushRecords('mstream1', records).then(function (maxSeqs) {
         _.keys(maxSeqs).length.should.equal(2);
@@ -113,7 +113,7 @@ describe('Record Culling', function () {
 
     return services.kinesis.createStream({
       ShardCount: 2,
-      StreamName: 'mstream2'
+      StreamName: 'mstream2',
     }).q().delay(50).then(function () {
       return kutil.pushRecords('mstream2', _.take(records, 60)).then(function (maxSeqs) {
         _.keys(maxSeqs).length.should.equal(2);
@@ -161,7 +161,7 @@ describe('Record Culling', function () {
 
     return services.kinesis.createStream({
       ShardCount: 2,
-      StreamName: 'mstream3'
+      StreamName: 'mstream3',
     }).q().delay(50).then(function () {
       return kutil.pushRecords('mstream3', _.take(records, 30)).then(function () {
         return services.mergeShards('mstream3', 'shardId-000000000000', 'shardId-000000000001');
@@ -241,7 +241,7 @@ describe('Record Culling', function () {
 
     return services.kinesis.createStream({
       ShardCount: 2,
-      StreamName: 'mstream4'
+      StreamName: 'mstream4',
     }).q().delay(50).then(function () {
       return worker.initialize([pusher.appKey()]).then(function () {
         return pusher.pushRecords(records1, 150).then(function () {

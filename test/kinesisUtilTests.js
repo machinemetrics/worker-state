@@ -23,7 +23,7 @@ describe('Kinesis Utilities', function () {
     var kutil = new KinesisUtil(services.kinesis);
     return services.kinesis.createStream({
       ShardCount: 50,
-      StreamName: 'stream2'
+      StreamName: 'stream2',
     }).q().delay(50).then(function () {
       return kutil.getShards('stream2').then(function (shards) {
         should.exist(shards);
@@ -36,7 +36,7 @@ describe('Kinesis Utilities', function () {
     var kutil = new KinesisUtil(services.kinesis);
     return services.kinesis.createStream({
       ShardCount: 2,
-      StreamName: 'stream3'
+      StreamName: 'stream3',
     }).q().delay(50).then(function () {
       return services.splitShard('stream3', 'shardId-000000000000');
     }).then(function () {
@@ -74,7 +74,7 @@ describe('Kinesis Utilities', function () {
       { ShardId: 'shardId-000000000001', SequenceNumber: '49556303523432154881539545814062592752097878316425543682' },
       { ShardId: 'shardId-000000000001', SequenceNumber: '59556303523432154881539545814062592752097878316425543682' },
       { ShardId: 'shardId-000000000001', SequenceNumber: '43556303523432154881539545814062592752097878316425543682' },
-      { ShardId: 'shardId-000000000001', SequenceNumber: '9955630352343215488153954581406259275209787831642554368' }
+      { ShardId: 'shardId-000000000001', SequenceNumber: '9955630352343215488153954581406259275209787831642554368' },
     ];
 
     var maxSeq = kutil.getMaxSequenceNumbers(data);
