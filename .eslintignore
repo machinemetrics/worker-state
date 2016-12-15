@@ -1,0 +1,5 @@
+**/node_modules/**
+*.min.js
+old/
+scratch/
+coverage/

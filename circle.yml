@@ -1,0 +1,37 @@
+machine:
+  environment:
+    config: test
+    PATH: ./node_modules/.bin/:$PATH
+  timezone:
+    UTC
+  node:
+    version: 4.3.0
+  services:
+    - redis
+
+# https://discuss.circleci.com/t/how-to-run-redis-3-2/5815/5
+dependencies:
+  pre:
+    - sudo service redis-server stop
+    - >
+      cd ~ && if [ ! -d "redis-3.2.5" ]; then
+        wget http://download.redis.io/releases/redis-3.2.5.tar.gz
+        tar xzf redis-3.2.5.tar.gz
+        cd redis-3.2.5 && make;
+      fi
+    - cd ~/redis-3.2.5 && sudo make install
+    - sudo sed -i 's/bin/local\/bin/g' /etc/init/redis-server.conf
+    - sudo service redis-server start
+  cache_directories:
+    - ~/redis-3.2.5
+
+test:
+  pre:
+    - npm install -g eslint@3.9.1
+    - npm install -g eslint-config-airbnb@12.0.0
+    - npm install -g eslint-plugin-import@1.16.0
+    - npm install -g eslint-plugin-jsx-a11y@2.2.3
+    - npm install -g eslint-plugin-react@6.4.1
+    - npm install -g istanbul@0.4.5
+  post:
+    - mv coverage $CIRCLE_ARTIFACTS

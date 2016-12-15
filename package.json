@@ -1,10 +1,13 @@
 {
+  "private": "true",
   "name": "worker-state",
   "description": "A data checkpointing service for Kinesis or other stream/batch applications",
   "version": "0.1.0",
   "main": "lib",
   "scripts": {
-    "test": "mocha test"
+    "test": "npm run lint && npm run cover",
+    "lint": "eslint --max-warnings 287 .",
+    "cover": "istanbul cover _mocha test -- -t 10000"
   },
   "repository": {
     "type": "git",
@@ -26,8 +29,8 @@
   },
   "devDependencies": {
     "dynalite": "^0.16.0",
-    "kinesalite": "^1.9.0",
-    "mocha": "^2.3.3",
+    "kinesalite": "^1.11.5",
+    "mocha": "^3.2.0",
     "should": "^7.1.0"
   }
 }

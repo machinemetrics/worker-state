@@ -1,14 +1,14 @@
-process.env['AWS_REGION'] = 'us-west-2';
+process.env.AWS_REGION = 'us-west-2';
 
-var _ = require('lodash'),
-    Q = require('q'),
-    should = require('should'),
-    KinesisPusher = require('../lib').KinesisPusher,
-    KinesisUtil = require('../lib/kinesisUtil'),
-    WorkerState = require('../lib').WorkerState,
-    WorkerLogger = require('../lib').Logger,
-    TestServices = require('./util/TestServices'),
-    DataServices = require('./util/DataServices');
+const _ = require('lodash');
+const Q = require('q');
+const KinesisPusher = require('../lib').KinesisPusher;
+const KinesisUtil = require('../lib/kinesisUtil');
+const WorkerState = require('../lib').WorkerState;
+const WorkerLogger = require('../lib').Logger;
+const TestServices = require('./util/TestServices');
+const DataServices = require('./util/DataServices');
+require('should');
 
 var services = new TestServices();
 var workerTable = 'TestWorkerTable';
@@ -17,7 +17,7 @@ var loggerTable = 'WorkerStateLog';
 describe('Record Pushing', function () {
   before(function () {
     return Q.all([
-      services.initKinesis({ stream: 'stream1' })
+      services.initKinesis({ stream: 'stream1' }),
     ]);
   });
 
@@ -37,7 +37,10 @@ describe('Record Pushing', function () {
 });
 
 describe('Record Culling', function () {
-  var worker, producer, pusher, streamName;
+  var worker;
+  var producer;
+  var pusher;
+  var streamName;
   var streamIndex = 0;
 
   beforeEach(function () {
@@ -53,7 +56,7 @@ describe('Record Culling', function () {
   afterEach(function () {
     return Q.all([
       worker.expungeAllKnownSavedState(),
-      services.stopKinesis()
+      services.stopKinesis(),
     ]);
   });
 
@@ -61,7 +64,7 @@ describe('Record Culling', function () {
     var kutil = new KinesisUtil(services.kinesis);
     var records = producer.generate(100);
 
-    return kutil.pushRecords(streamName, records).then(function (maxSeqs) {
+    return kutil.pushRecords(streamName, records).then(function (_maxSeqs) {
       return pusher.cullPreviouslyPushedRecords(records).then(function (filtered) {
         filtered.length.should.equal(0);
       });
@@ -72,7 +75,7 @@ describe('Record Culling', function () {
     var kutil = new KinesisUtil(services.kinesis);
     var records = producer.generate(100);
 
-    return kutil.pushRecords(streamName, _.take(records, 50)).then(function (maxSeqs) {
+    return kutil.pushRecords(streamName, _.take(records, 50)).then(function (_maxSeqs) {
       return pusher.cullPreviouslyPushedRecords(records).then(function (filtered) {
         filtered.length.should.equal(50);
         _.each(filtered, function (r) {
@@ -92,7 +95,7 @@ describe('Record Culling', function () {
 
     return services.kinesis.createStream({
       ShardCount: 2,
-      StreamName: 'mstream1'
+      StreamName: 'mstream1',
     }).q().delay(50).then(function () {
       return kutil.pushRecords('mstream1', records).then(function (maxSeqs) {
         _.keys(maxSeqs).length.should.equal(2);
@@ -113,7 +116,7 @@ describe('Record Culling', function () {
 
     return services.kinesis.createStream({
       ShardCount: 2,
-      StreamName: 'mstream2'
+      StreamName: 'mstream2',
     }).q().delay(50).then(function () {
       return kutil.pushRecords('mstream2', _.take(records, 60)).then(function (maxSeqs) {
         _.keys(maxSeqs).length.should.equal(2);
@@ -161,7 +164,7 @@ describe('Record Culling', function () {
 
     return services.kinesis.createStream({
       ShardCount: 2,
-      StreamName: 'mstream3'
+      StreamName: 'mstream3',
     }).q().delay(50).then(function () {
       return kutil.pushRecords('mstream3', _.take(records, 30)).then(function () {
         return services.mergeShards('mstream3', 'shardId-000000000000', 'shardId-000000000001');
@@ -241,7 +244,7 @@ describe('Record Culling', function () {
 
     return services.kinesis.createStream({
       ShardCount: 2,
-      StreamName: 'mstream4'
+      StreamName: 'mstream4',
     }).q().delay(50).then(function () {
       return worker.initialize([pusher.appKey()]).then(function () {
         return pusher.pushRecords(records1, 150).then(function () {
