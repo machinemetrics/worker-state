@@ -1,6 +1,6 @@
 {
   "rules": {
-    "no-unused-vars": [ "warn", { "argsIgnorePattern": "^_" } ],
+    "no-unused-vars": [ "error", { "argsIgnorePattern": "^_" } ],
 
     "array-callback-return": [ "warn" ],
     "default-case": [ "warn" ],
