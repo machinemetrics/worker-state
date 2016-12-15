@@ -1,5 +1,7 @@
 {
   "rules": {
+    "no-unused-vars": [ "warn", { "argsIgnorePattern": "^_" } ],
+
     "array-callback-return": [ "warn" ],
     "default-case": [ "warn" ],
     "keyword-spacing": [ "warn" ],
@@ -18,7 +20,6 @@
     "object-curly-spacing": [ "warn" ],
     "semi": [ "warn" ],
     "no-plusplus": [ "warn" ],
-    "no-unused-vars": [ "warn" ],
     "eol-last": [ "warn" ],
     "no-shadow": [ "warn" ],
     "eqeqeq": [ "warn" ],
