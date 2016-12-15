@@ -64,7 +64,7 @@ describe('Record Culling', function () {
     var kutil = new KinesisUtil(services.kinesis);
     var records = producer.generate(100);
 
-    return kutil.pushRecords(streamName, records).then(function (maxSeqs) { // eslint-disable-line no-unused-vars
+    return kutil.pushRecords(streamName, records).then(function (_maxSeqs) {
       return pusher.cullPreviouslyPushedRecords(records).then(function (filtered) {
         filtered.length.should.equal(0);
       });
@@ -75,7 +75,7 @@ describe('Record Culling', function () {
     var kutil = new KinesisUtil(services.kinesis);
     var records = producer.generate(100);
 
-    return kutil.pushRecords(streamName, _.take(records, 50)).then(function (maxSeqs) { // eslint-disable-line no-unused-vars
+    return kutil.pushRecords(streamName, _.take(records, 50)).then(function (_maxSeqs) {
       return pusher.cullPreviouslyPushedRecords(records).then(function (filtered) {
         filtered.length.should.equal(50);
         _.each(filtered, function (r) {
