@@ -17,9 +17,9 @@ const defaultShard = 'shardId-000000000000';
 const memStore = {};
 
 const stateFactory = {
-  dynamo: (shard) => new WorkerState('wsunit', shard, workerTable),
-  redis: (shard) => new WorkerState('wsunit', shard, new RedisStore('localhost', 6379)),
-  memory: (shard) => new WorkerState('wsunit', shard, new MemoryStore(memStore)),
+  dynamo: shard => new WorkerState('wsunit', shard, workerTable),
+  redis: shard => new WorkerState('wsunit', shard, new RedisStore('localhost', 6379)),
+  memory: shard => new WorkerState('wsunit', shard, new MemoryStore(memStore)),
 };
 
 describe('Worker state initialization', () => {
