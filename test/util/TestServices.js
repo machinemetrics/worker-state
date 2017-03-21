@@ -4,11 +4,14 @@ const bigInt = require('big-integer');
 const kinesalite = require('kinesalite');
 const dynalite = require('dynalite');
 const AWS = require('aws-sdk-q');
-const http = require('http');
+const https = require('https');
+
+// Kinesalite is self-signed and normally invalid for node, so ignore it.
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 AWS.config.update({
   s3ForcePathStyle: true,
-  sslEnabled: false,
+  sslEnabled: true,
   region: process.env.AWS_REGION,
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
@@ -28,6 +31,7 @@ TestServices.prototype.initKinesis = function (cfg) {
   var self = this;
 
   self.kinesaliteServer = kinesalite({
+    ssl: true,
     createStreamMs: 25,
     deleteStreamMs: 25,
     updateStreamMs: 25,
@@ -39,8 +43,8 @@ TestServices.prototype.initKinesis = function (cfg) {
       return deferred.reject(err);
     }
 
-    AWS.config.httpOptions = { agent: http.globalAgent };
-    self.kinesis = new AWS.Kinesis({ endpoint: `http://localhost:${port}` });
+    AWS.config.httpOptions = { agent: new https.Agent() };
+    self.kinesis = new AWS.Kinesis({ endpoint: `https://localhost:${port}` });
 
     deferred.resolve(self.ensureStream(cfg.stream));
   });
