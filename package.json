@@ -29,6 +29,12 @@
   },
   "devDependencies": {
     "dynalite": "^0.16.0",
+    "eslint": "^3.13.1",
+    "eslint-config-mm": "https://github.com/machinemetrics/eslint-config-mm",
+    "eslint-plugin-import": "^1.16.0",
+    "eslint-plugin-jsx-a11y": "^2.2.3",
+    "eslint-plugin-react": "^6.4.1",
+    "istanbul": "^0.4.5",
     "kinesalite": "^1.11.5",
     "mocha": "^3.2.0",
     "should": "^7.1.0"
