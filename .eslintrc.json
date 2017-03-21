@@ -51,7 +51,7 @@
     "no-else-return": [ "off" ],
     "no-var": [ "off" ]
   },
-  "extends": "airbnb",
+  "extends": "mm",
   "plugins": [
     "react",
     "jsx-a11y",
