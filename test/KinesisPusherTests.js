@@ -45,7 +45,7 @@ describe('Record Culling', function () {
 
   beforeEach(function () {
     streamName = 'streamrc' + streamIndex++;
-    return services.initKinesis({stream: streamName}).then(function () {
+    return services.initKinesis({ stream: streamName }).then(function () {
       worker = new WorkerState('testcull', 'shardId-000000000000', workerTable);
       pusher = new KinesisPusher(worker, streamName, services.kinesis);
       pusher.logger = new WorkerLogger('testcull', 'shardId-000000000000', loggerTable);
