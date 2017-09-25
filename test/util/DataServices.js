@@ -79,11 +79,11 @@ RecordProducer.prototype.validateStream = function (kinesis, stream, shard, opti
   }).then(function () {
     recs = util.unpackRecords(recs, false);
     if (options.packCounts) {
-      if (options.packCounts.length != recs.length)
+      if (options.packCounts.length !== recs.length)
         return false;
 
       var countsMatch = _.every(_.zip(recs, options.packCounts), function (item) {
-        return item[0].length == item[1];
+        return item[0].length === item[1];
       });
       if (!countsMatch)
         return false;
@@ -103,12 +103,12 @@ RecordProducer.prototype.validateStream = function (kinesis, stream, shard, opti
     var failures = _(self.partitions).map(function (key) {
       if (options.partitions && !_.includes(options.partitions, key))
         return [];
-      if (A[key].length != B[key].length)
+      if (A[key].length !== B[key].length)
         return false;
 
       var pairs = _.zip(A[key], B[key]);
       return _.filter(pairs, function (pair) {
-        return pair[0].Data != pair[1].Data;
+        return pair[0].Data !== pair[1].Data;
       });
     }).flatten().value();
 

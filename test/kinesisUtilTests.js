@@ -90,7 +90,7 @@ describe('Pushing Records', function () {
 
   beforeEach(function () {
     streamName = 'streamUtilPush' + streamIndex++;
-    return services.initKinesis({stream: streamName});
+    return services.initKinesis({ stream: streamName });
   });
 
   afterEach(function () {
