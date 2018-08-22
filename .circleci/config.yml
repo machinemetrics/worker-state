@@ -1,0 +1,47 @@
+version: 2
+executorType: docker
+jobs:
+  node-8:
+    docker:
+      - image: 352302322568.dkr.ecr.us-west-2.amazonaws.com/mm-ecs/ci-node:8.9.4.0
+      - image: redis:3.2.6
+    working_directory: ~/worker-state
+    steps:
+      - checkout
+      - restore_cache:
+          key: worker-state-full-8-{{ .Branch }}-{{ checksum "package.json" }}
+      - run:
+          command: yarn install
+      - save_cache:
+          key: worker-state-full-8-{{ .Branch }}-{{ checksum "package.json" }}
+          paths:
+            - ~/worker-state/node_modules
+      - run:
+          command: npm test
+      - store_artifacts:
+          path: ~/worker-state/coverage
+  node-6:
+    docker:
+      - image: 352302322568.dkr.ecr.us-east-1.amazonaws.com/mm-ecs/ci-node:6.10.1.8
+      - image: redis:3.2.6
+    working_directory: ~/worker-state
+    steps:
+      - checkout
+      - restore_cache:
+          key: worker-state-full-6-{{ .Branch }}-{{ checksum "package.json" }}
+      - run:
+          command: yarn install
+      - save_cache:
+          key: worker-state-full-6-{{ .Branch }}-{{ checksum "package.json" }}
+          paths:
+            - ~/worker-state/node_modules
+      - run:
+          command: npm test
+      - store_artifacts:
+          path: ~/worker-state/coverage
+workflows:
+  version: 2
+  build-all:
+    jobs:
+      - node-8
+      - node-6
