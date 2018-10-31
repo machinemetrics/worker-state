@@ -45,5 +45,5 @@ workflows:
     jobs:
       - node-8
       - node-6:
-        requires: # Run serially, since global Dynamo resources are shared.
-          - node-8
+          requires: # Run serially, since global Dynamo resources are shared.
+            - node-8
