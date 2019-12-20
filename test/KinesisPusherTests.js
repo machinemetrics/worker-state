@@ -96,7 +96,7 @@ describe('Record Culling', function () {
     return services.kinesis.createStream({
       ShardCount: 2,
       StreamName: 'mstream1',
-    }).q().delay(50).then(function () {
+    }).promise().delay(50).then(function () {
       return kutil.pushRecords('mstream1', records).then(function (maxSeqs) {
         _.keys(maxSeqs).length.should.equal(2);
         return pusher.cullPreviouslyPushedRecords(records).then(function (filtered) {
@@ -117,7 +117,7 @@ describe('Record Culling', function () {
     return services.kinesis.createStream({
       ShardCount: 2,
       StreamName: 'mstream2',
-    }).q().delay(50).then(function () {
+    }).promise().delay(50).then(function () {
       return kutil.pushRecords('mstream2', _.take(records, 60)).then(function (maxSeqs) {
         _.keys(maxSeqs).length.should.equal(2);
         return pusher.cullPreviouslyPushedRecords(records).then(function (filtered) {
@@ -165,7 +165,7 @@ describe('Record Culling', function () {
     return services.kinesis.createStream({
       ShardCount: 2,
       StreamName: 'mstream3',
-    }).q().delay(50).then(function () {
+    }).promise().delay(50).then(function () {
       return kutil.pushRecords('mstream3', _.take(records, 30)).then(function () {
         return services.mergeShards('mstream3', 'shardId-000000000000', 'shardId-000000000001');
       }).then(function () {
@@ -245,7 +245,7 @@ describe('Record Culling', function () {
     return services.kinesis.createStream({
       ShardCount: 2,
       StreamName: 'mstream4',
-    }).q().delay(50).then(function () {
+    }).promise().delay(50).then(function () {
       return worker.initialize([pusher.appKey()]).then(function () {
         return pusher.pushRecords(records1, 150).then(function () {
           return worker.flush(150);

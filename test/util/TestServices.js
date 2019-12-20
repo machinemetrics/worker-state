@@ -3,7 +3,7 @@ const _ = require('lodash');
 const bigInt = require('big-integer');
 const kinesalite = require('kinesalite');
 const dynalite = require('dynalite');
-const AWS = require('aws-sdk-q');
+const AWS = require('aws-sdk');
 const https = require('https');
 
 // Kinesalite is self-signed and normally invalid for node, so ignore it.
@@ -90,12 +90,12 @@ TestServices.prototype.initDynamo = function (cfg) {
 TestServices.prototype.ensureStream = function (streamName) {
   var self = this;
 
-  return self.kinesis.listStreams().q().then(function (data) {
+  return self.kinesis.listStreams().promise().then(function (data) {
     if (!_.contains(data.StreamNames, streamName)) {
       return self.kinesis.createStream({
         ShardCount: 1,
         StreamName: streamName,
-      }).q().delay(50);
+      }).promise().delay(50);
     }
   });
 };
@@ -105,7 +105,7 @@ TestServices.prototype.ensureWorkerStateTable = function (tableName) {
 
   return this.dynamodb.describeTable({
     TableName: tableName,
-  }).q().catch(function (err) {
+  }).promise().catch(function (err) {
     if (_.startsWith(err.message, 'ResourceNotFoundException')) {
       return self.dynamodb.createTable({
         AttributeDefinitions: [{
@@ -127,7 +127,7 @@ TestServices.prototype.ensureWorkerStateTable = function (tableName) {
           WriteCapacityUnits: 10,
         },
         TableName: tableName,
-      }).q().delay(100);
+      }).promise().delay(100);
     }
     throw err;
   });
@@ -136,7 +136,7 @@ TestServices.prototype.ensureWorkerStateTable = function (tableName) {
 TestServices.prototype.getAnyOpenShard = function (streamName) {
   return this.kinesis.describeStream({
     StreamName: streamName,
-  }).q().then(function (resp) {
+  }).promise().then(function (resp) {
     return _(resp.StreamDescription.Shards).reject('SequenceNumberRange.EndingSequenceNumber').map('ShardId').first();
   });
 };
@@ -145,17 +145,17 @@ TestServices.prototype.splitShard = function (streamName, shardId) {
   var self = this;
   return this.kinesis.describeStream({
     StreamName: streamName,
-  }).q().then(function (res) {
+  }).promise().then(function (res) {
     var shard = _(res.StreamDescription.Shards).find('ShardId', shardId);
     return self.kinesis.splitShard({
       NewStartingHashKey: averageMD5(shard.HashKeyRange.StartingHashKey, shard.HashKeyRange.EndingHashKey),
       ShardToSplit: shardId,
       StreamName: streamName,
-    }).q().delay(50);
+    }).promise().delay(50);
   }).then(function () {
     return self.kinesis.describeStream({
       StreamName: streamName,
-    }).q().then(function (res) {
+    }).promise().then(function (res) {
       return _(res.StreamDescription.Shards).filter('ParentShardId', shardId).map('ShardId').value();
     });
   });
@@ -167,10 +167,10 @@ TestServices.prototype.mergeShards = function (streamName, shardId1, shardId2) {
     AdjacentShardToMerge: shardId2,
     ShardToMerge: shardId1,
     StreamName: streamName,
-  }).q().delay(50).then(function () {
+  }).promise().delay(50).then(function () {
     return self.kinesis.describeStream({
       StreamName: streamName,
-    }).q().then(function (res) {
+    }).promise().then(function (res) {
       return _(res.StreamDescription.Shards).find(function (shard) {
         return shard.AdjacentParentShardId === shardId2 && shard.ParentShardId === shardId1;
       }).ShardId;

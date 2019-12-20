@@ -61,7 +61,7 @@ RecordProducer.prototype.validateStream = function (kinesis, stream, shard, opti
   }
 
   var recs = [];
-  return kinesis.getShardIterator(iteratorParams).q().then(function (data) {
+  return kinesis.getShardIterator(iteratorParams).promise().then(function (data) {
     var iterator = data.ShardIterator;
 
     return async.whilst(function () {
@@ -69,7 +69,7 @@ RecordProducer.prototype.validateStream = function (kinesis, stream, shard, opti
     }, function () {
       return kinesis.getRecords({
         ShardIterator: iterator,
-      }).q().then(function (data) {
+      }).promise().then(function (data) {
         iterator = data.NextShardIterator;
         if (_.isEmpty(data.Records))
           iterator = undefined;

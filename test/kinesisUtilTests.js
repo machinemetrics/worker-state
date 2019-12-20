@@ -24,7 +24,7 @@ describe('Kinesis Utilities', function () {
     return services.kinesis.createStream({
       ShardCount: 50,
       StreamName: 'stream2',
-    }).q().delay(50).then(function () {
+    }).promise().delay(50).then(function () {
       return kutil.getShards('stream2').then(function (shards) {
         should.exist(shards);
         _.keys(shards).length.should.equal(50);
@@ -37,7 +37,7 @@ describe('Kinesis Utilities', function () {
     return services.kinesis.createStream({
       ShardCount: 2,
       StreamName: 'stream3',
-    }).q().delay(50).then(function () {
+    }).promise().delay(50).then(function () {
       return services.splitShard('stream3', 'shardId-000000000000');
     }).then(function () {
       return kutil.getShards('stream3');
