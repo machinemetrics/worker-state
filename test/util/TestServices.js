@@ -6,6 +6,8 @@ const dynalite = require('dynalite');
 const AWS = require('aws-sdk');
 const https = require('https');
 
+AWS.config.setPromisesDependency(Q.Promise)
+
 // Kinesalite is self-signed and normally invalid for node, so ignore it.
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
