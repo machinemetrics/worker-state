@@ -6,7 +6,7 @@
   "main": "lib",
   "scripts": {
     "test": "npm run lint && npm run cover",
-    "lint": "eslint --max-warnings 141 .",
+    "lint": "eslint --max-warnings 140 .",
     "cover": "istanbul cover _mocha test -- -t 10000"
   },
   "repository": {
