@@ -140,6 +140,15 @@ describe('Kinesis Utilities', function () {
       err.message.should.equal('Could not pull record that meets count and size limits');
     }
   });
+
+  it('Should fail if single record exceeds byte limit', function () {
+    var kutil = new KinesisUtil(services.kinesis);
+
+    var data = [];
+
+    var packed = kutil.groupAndPackRecords(data, null, 50);
+    packed.length.should.equal(0);
+  });
 });
 
 describe('Pushing Records', function () {
