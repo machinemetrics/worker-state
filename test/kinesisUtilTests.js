@@ -82,6 +82,73 @@ describe('Kinesis Utilities', function () {
     maxSeq['shardId-000000000000'].toString().should.equal('59556303523432154881539545814062592752077878316425543682');
     maxSeq['shardId-000000000001'].toString().should.equal('59556303523432154881539545814062592752097878316425543682');
   });
+
+  it('Should group records by count limit', function () {
+    var kutil = new KinesisUtil(services.kinesis);
+
+    var makeSet = (key, n) => {
+      return _.times(n, (i) => {
+        return { PartitionKey: key, Data: { value: i } };
+      });
+    };
+
+    var data = [
+      ...makeSet('key1', 5),
+      ...makeSet('key2', 10),
+    ];
+
+    var packed = kutil.groupAndPackRecords(data, 5);
+    packed.length.should.equal(2);
+    packed[0].length.should.equal(2);
+    packed[1].length.should.equal(1);
+  });
+
+  it('Should group records by byte limit', function () {
+    var kutil = new KinesisUtil(services.kinesis);
+
+    var makeSet = (key, n) => {
+      return _.times(n, (i) => {
+        return { PartitionKey: key, Data: { value: i } };
+      });
+    };
+
+    var data = [
+      ...makeSet('key1', 5),
+      ...makeSet('key2', 10),
+    ];
+
+    var packed = kutil.groupAndPackRecords(data, null, 70);
+    packed.length.should.equal(4);
+    packed[0].length.should.equal(2);
+    packed[1].length.should.equal(2);
+    packed[2].length.should.equal(1);
+    packed[3].length.should.equal(1);
+  });
+
+  it('Should fail if single record exceeds byte limit', function () {
+    var kutil = new KinesisUtil(services.kinesis);
+
+    var data = [
+      { PartitionKey: 'key1', Data: { value: 0 } },
+      { PartitionKey: 'key2', Data: { value: 'The quick brown fox jumps over the lazy dogs' } },
+    ];
+
+    try {
+      kutil.groupAndPackRecords(data, null, 50);
+      throw new Error('Packed records returned unexpectedly');
+    } catch (err) {
+      err.message.should.equal('Could not pull record that meets count and size limits');
+    }
+  });
+
+  it('Should fail if single record exceeds byte limit', function () {
+    var kutil = new KinesisUtil(services.kinesis);
+
+    var data = [];
+
+    var packed = kutil.groupAndPackRecords(data, null, 50);
+    packed.length.should.equal(0);
+  });
 });
 
 describe('Pushing Records', function () {
