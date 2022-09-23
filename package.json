@@ -1,6 +1,5 @@
 {
-  "private": "true",
-  "name": "worker-state",
+  "name": "@machinemetrics/worker-state",
   "description": "A data checkpointing service for Kinesis or other stream/batch applications",
   "version": "0.1.0",
   "main": "lib",
@@ -11,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/machinemetrics/worker-state"
+    "url": "https://github.com/machinemetrics/worker-state.git"
   },
   "dependencies": {
     "async-q": "^0.2.2",
