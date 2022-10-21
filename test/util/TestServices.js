@@ -200,12 +200,12 @@ TestServices.prototype.validateRedisSecondary = function (state) {
     result[appKey] = { };
 
     return state.store.readItems(appKey, subkeys, true).then(function (data) {
-      result[appKey].primary = data;
+      result[appKey].secondary = data;
     }).then(function () {
       state.store.readFromPrimary();
       return state.store.readItems(appKey, subkeys, true);
     }).then(function (data) {
-      result[appKey].secondary = data;
+      result[appKey].primary = data;
     });
   })).then(function () {
     return result;
