@@ -5,14 +5,12 @@ const Q = require('q');
 const KinesisPusher = require('../lib').KinesisPusher;
 const KinesisUtil = require('../lib/kinesisUtil');
 const WorkerState = require('../lib').WorkerState;
-// const WorkerLogger = require('../lib').Logger;
 const TestServices = require('./util/TestServices');
 const DataServices = require('./util/DataServices');
 require('should');
 
 var services = new TestServices();
 var workerTable = 'TestWorkerTable';
-// var loggerTable = 'WorkerStateLog';
 
 describe('Record Pushing', function () {
   before(function () {
@@ -48,7 +46,6 @@ describe('Record Culling', function () {
     return services.initKinesis({ stream: streamName }).then(function () {
       worker = new WorkerState('testcull', 'shardId-000000000000', workerTable);
       pusher = new KinesisPusher(worker, streamName, services.kinesis);
-      // pusher.logger = new WorkerLogger('testcull', 'shardId-000000000000', loggerTable);
       producer = new DataServices.RecordProducer(1);
     });
   });
@@ -88,7 +85,6 @@ describe('Record Culling', function () {
   it('Should cull all records from empty worker on 2 shards', function () {
     producer = new DataServices.RecordProducer(['alpha', 'bravo']);
     pusher = new KinesisPusher(worker, 'mstream1', services.kinesis);
-    // pusher.logger = new WorkerLogger('testcull', 'shardId-000000000000', loggerTable);
 
     var kutil = new KinesisUtil(services.kinesis);
     var records = producer.generateRoundRobin(100);
@@ -109,7 +105,6 @@ describe('Record Culling', function () {
   it('Should cull some records from empty worker on 2 shards', function () {
     producer = new DataServices.RecordProducer(['alpha', 'bravo']);
     pusher = new KinesisPusher(worker, 'mstream2', services.kinesis);
-    // pusher.logger = new WorkerLogger('testcull', 'shardId-000000000000', loggerTable);
 
     var kutil = new KinesisUtil(services.kinesis);
     var records = producer.generateRoundRobin(100);
@@ -157,7 +152,6 @@ describe('Record Culling', function () {
   it('Should cull some records from empty worker on merged shard', function () {
     producer = new DataServices.RecordProducer(['alpha', 'bravo']);
     pusher = new KinesisPusher(worker, 'mstream3', services.kinesis);
-    // pusher.logger = new WorkerLogger('testcull', 'shardId-000000000000', loggerTable);
 
     var kutil = new KinesisUtil(services.kinesis);
     var records = producer.generateRoundRobin(100);
@@ -237,7 +231,6 @@ describe('Record Culling', function () {
   it('Should cull all records from failed worker on 2 shards', function () {
     producer = new DataServices.RecordProducer(['alpha', 'bravo']);
     pusher = new KinesisPusher(worker, 'mstream4', services.kinesis);
-    // pusher.logger = new WorkerLogger('testcull', 'shardId-000000000000', loggerTable);
 
     var records1 = producer.generateRoundRobin(50);
     var records2 = producer.generateRoundRobin(50);
