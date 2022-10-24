@@ -1,29 +1,11 @@
 version: 2
 executorType: docker
 jobs:
-  node-8:
-    docker:
-      - image: 352302322568.dkr.ecr.us-west-2.amazonaws.com/mm-ecs/ci-node:8.9.4.0
-      - image: redis:3.2.6
-    working_directory: ~/worker-state
-    steps:
-      - checkout
-      - restore_cache:
-          key: worker-state-full-8-{{ .Branch }}-{{ checksum "package.json" }}
-      - run:
-          command: yarn install
-      - save_cache:
-          key: worker-state-full-8-{{ .Branch }}-{{ checksum "package.json" }}
-          paths:
-            - ~/worker-state/node_modules
-      - run:
-          command: npm test
-      - store_artifacts:
-          path: ~/worker-state/coverage
   node-12:
     docker:
       - image: 352302322568.dkr.ecr.us-east-1.amazonaws.com/mm-ecs/ci-node:12.13.0.0
-      - image: redis:3.2.6
+      - image: 352302322568.dkr.ecr.us-west-2.amazonaws.com/mm-data-platform/redis:8da63f72fa4ab3a49ee9301947525baa67f6581d
+      - image: 352302322568.dkr.ecr.us-west-2.amazonaws.com/mm-data-platform/redis-test:1702aafd8728cb3b8d0885a182d82bc37997fafd
     working_directory: ~/worker-state
     steps:
       - checkout
@@ -44,6 +26,3 @@ workflows:
   build-all:
     jobs:
       - node-12
-      - node-8:
-          requires: # Run serially, since global Dynamo resources are shared.
-            - node-12

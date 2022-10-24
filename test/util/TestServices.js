@@ -178,6 +178,40 @@ TestServices.prototype.mergeShards = function (streamName, shardId1, shardId2) {
   });
 };
 
+TestServices.prototype.validateRedisSecondary = function (state) {
+  var keys = state.initKeys;
+  var subkeys = state.initSubkeys;
+
+  if (subkeys && state.store.canReadSubkeyList) {
+    subkeys = _.map(subkeys, function (sk) {
+      return state.makeShardKey(sk);
+    });
+    subkeys.push(state.makeShardKey());
+  } else {
+    subkeys = state.makeShardKey();
+  }
+
+  state.store.readFromSecondary();
+
+  var result = { };
+
+  return Q.all(_.map(keys, function (key) {
+    var appKey = state.makeAppKey(key);
+    result[appKey] = { };
+
+    return state.store.readItems(appKey, subkeys, true).then(function (data) {
+      result[appKey].secondary = data;
+    }).then(function () {
+      state.store.readFromPrimary();
+      return state.store.readItems(appKey, subkeys, true);
+    }).then(function (data) {
+      result[appKey].primary = data;
+    });
+  })).then(function () {
+    return result;
+  });
+};
+
 function averageMD5(hash1, hash2) {
   return parseHashKey(hash1).add(parseHashKey(hash2)).divide(2).toString();
 }
