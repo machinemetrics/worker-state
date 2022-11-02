@@ -10,7 +10,7 @@ jobs:
     steps:
       - aws-cli/setup
       - run:
-          command: aws sts get-called-identity
+          command: aws sts get-caller-identity
       - run:
           command: |
             RETRIEVED_SECRET=$(aws secretsmanager get-secret-value --secret-id production/npm_github_token_ci --query SecretString --output text) \\
