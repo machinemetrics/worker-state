@@ -4,10 +4,9 @@ executorType: docker
 orbs:
     aws-cli: circleci/aws-cli@3.1.3
 
-jobs:
+jobs:          
   fetch-token:
-    docker:
-      - image: 352302322568.dkr.ecr.us-east-1.amazonaws.com/mm-ecs/ci-node:12.13.0.0
+    executor: aws-cli/default
     steps:
       - aws-cli/setup:
           aws-access-key-id: ${AWS_ACCESS_KEY_ID}
