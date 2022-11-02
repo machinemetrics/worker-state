@@ -1,4 +1,4 @@
-version: 2
+version: 2.1
 executorType: docker
 
 orbs:
@@ -9,9 +9,9 @@ jobs:
     executor: aws-cli/default
     steps:
       - aws-cli/setup:
-          aws-access-key-id: ${AWS_ACCESS_KEY_ID}
-          aws-secret-access-key: ${AWS_SECRET_ACCESS_KEY}
-          aws-region: ${AWS_REGION}
+          aws-access-key-id: AWS_ACCESS_KEY_ID
+          aws-secret-access-key: AWS_SECRET_ACCESS_KEY
+          aws-region: AWS_REGION
       - run:
           command: |
             RETRIEVED_SECRET=$(aws secretsmanager get-secret-value --secret-id production/npm_github_token_ci --query SecretString --output text) \\
@@ -27,7 +27,7 @@ jobs:
       - restore_cache:
           key: worker-state-full-8-{{ .Branch }}-{{ checksum "package.json" }}
       - run:
-          command: echo ${NPM_GITHUB_TOKEN}
+          command: echo $NPM_GITHUB_TOKEN
       - run:
           command: rm -f ./.npmrc
       - run:
@@ -50,7 +50,7 @@ jobs:
       - restore_cache:
           key: worker-state-full-12-{{ .Branch }}-{{ checksum "package.json" }}
       - run:
-          command: echo ${NPM_GITHUB_TOKEN}
+          command: echo $NPM_GITHUB_TOKEN
       - run:
           command: rm -f ./.npmrc
       - run:
@@ -68,7 +68,9 @@ workflows:
   build-all:
     jobs:
       - fetch-token
-      - node-12
+      - node-12:
+          requires:
+            - fetch-token
       - node-8:
           requires: # Run serially, since global Dynamo resources are shared.
             - node-12
