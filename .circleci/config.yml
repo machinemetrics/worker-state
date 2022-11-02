@@ -1,6 +1,23 @@
 version: 2
 executorType: docker
+
+orbs:
+    aws-cli: circleci/aws-cli@3.1.3
+
 jobs:
+  fetch-token:
+    docker:
+      - image: 352302322568.dkr.ecr.us-east-1.amazonaws.com/mm-ecs/ci-node:12.13.0.0
+    steps:
+      - aws-cli/setup:
+          aws-access-key-id: ${AWS_ACCESS_KEY_ID}
+          aws-secret-access-key: ${AWS_SECRET_ACCESS_KEY}
+          aws-region: ${AWS_REGION}
+      - run:
+          command: |
+            RETRIEVED_SECRET=$(aws secretsmanager get-secret-value --secret-id production/npm_github_token_ci --query SecretString --output text) \\
+            SECRET_VALUE node -pe 'JSON.parse(process.argv[1]).NPM_GITHUB_TOKEN' $RETRIEVED_SECRET \\
+            echo 'export NPM_GITHUB_TOKEN="$SECRET_VALUE"' >> "$BASH_ENV"
   node-8:
     docker:
       - image: 352302322568.dkr.ecr.us-west-2.amazonaws.com/mm-ecs/ci-node:8.9.4.0
@@ -10,6 +27,8 @@ jobs:
       - checkout
       - restore_cache:
           key: worker-state-full-8-{{ .Branch }}-{{ checksum "package.json" }}
+      - run:
+          command: echo ${NPM_GITHUB_TOKEN}
       - run:
           command: rm -f ./.npmrc
       - run:
@@ -32,6 +51,8 @@ jobs:
       - restore_cache:
           key: worker-state-full-12-{{ .Branch }}-{{ checksum "package.json" }}
       - run:
+          command: echo ${NPM_GITHUB_TOKEN}
+      - run:
           command: rm -f ./.npmrc
       - run:
           command: yarn install
@@ -47,6 +68,7 @@ workflows:
   version: 2
   build-all:
     jobs:
+      - fetch-token
       - node-12
       - node-8:
           requires: # Run serially, since global Dynamo resources are shared.
