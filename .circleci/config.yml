@@ -20,9 +20,13 @@ commands:
             echo $SECRET_VALUE
             echo 'export NPM_GITHUB_TOKEN="$SECRET_VALUE"'
             source "$BASH_ENV"
+            echo $BASH_ENV
             echo $NPM_GITHUB_TOKEN
       - run:
-          command: echo ${NPM_GITHUB_TOKEN}
+          command: |
+            echo ${NPM_GITHUB_TOKEN}
+            echo $BASH_ENV
+            echo $SHELL
 
 jobs:          
   node-8:
