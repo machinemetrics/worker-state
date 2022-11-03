@@ -22,6 +22,7 @@ commands:
             source "$BASH_ENV"
             echo $BASH_ENV
             echo $NPM_GITHUB_TOKEN
+            echo $SHELL
       - run:
           command: |
             echo ${NPM_GITHUB_TOKEN}
