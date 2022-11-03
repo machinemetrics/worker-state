@@ -23,7 +23,9 @@ jobs:
             source "$BASH_ENV"
             echo $NPM_GITHUB_TOKEN
       - run:
-          command: echo $NPM_GITHUB_TOKEN
+          command: echo ${NPM_GITHUB_TOKEN}
+      - run:
+          command: echo $SHELL
   node-8:
     docker:
       - image: 352302322568.dkr.ecr.us-west-2.amazonaws.com/mm-ecs/ci-node:8.9.4.0
@@ -34,7 +36,7 @@ jobs:
       - restore_cache:
           key: worker-state-full-8-{{ .Branch }}-{{ checksum "package.json" }}
       - run:
-          command: echo $NPM_GITHUB_TOKEN
+          command: echo ${NPM_GITHUB_TOKEN}
       - run:
           command: rm -f ./.npmrc
       - run:
@@ -57,7 +59,9 @@ jobs:
       - restore_cache:
           key: worker-state-full-12-{{ .Branch }}-{{ checksum "package.json" }}
       - run:
-          command: echo $NPM_GITHUB_TOKEN
+          command: echo $SHELL
+      - run:
+          command: echo ${NPM_GITHUB_TOKEN}
       - run:
           command: rm -f ./.npmrc
       - run:
