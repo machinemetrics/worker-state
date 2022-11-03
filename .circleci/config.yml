@@ -81,7 +81,7 @@ workflows:
     jobs:
       - node-12:
           context:
-              - aws-ci-user-credentials
+              - temp-context
       - node-8:
           requires: # Run serially, since global Dynamo resources are shared.
             - node-12
