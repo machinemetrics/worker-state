@@ -77,7 +77,7 @@ jobs:
 workflows:
   build-all:
     jobs:
-      - node-12:
+      - node-12
       - node-8:
           requires: # Run serially, since global Dynamo resources are shared.
             - node-12
