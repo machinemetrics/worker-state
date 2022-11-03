@@ -19,6 +19,9 @@ jobs:
             RETRIEVED_SECRET=$(aws secretsmanager get-secret-value --secret-id production/npm_github_token_ci --query SecretString --output text)
             SECRET_VALUE=$(node -pe 'JSON.parse(process.argv[1]).NPM_GITHUB_TOKEN' $RETRIEVED_SECRET)
             echo 'export NPM_GITHUB_TOKEN="$SECRET_VALUE"' >> "$BASH_ENV"
+            source "$BASH_ENV"
+      - run:
+          command: echo $NPM_GITHUB_TOKEN
   node-8:
     docker:
       - image: 352302322568.dkr.ecr.us-west-2.amazonaws.com/mm-ecs/ci-node:8.9.4.0
