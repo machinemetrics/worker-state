@@ -80,8 +80,6 @@ workflows:
       - node-12:
           context:
               - aws-ci-user-credentials
-          requires:
-            - fetch-token
       - node-8:
           requires: # Run serially, since global Dynamo resources are shared.
             - node-12
