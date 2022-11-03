@@ -6,7 +6,8 @@ orbs:
 
 jobs:          
   fetch-token:
-    executor: aws-cli/default
+    docker:
+      - image: 352302322568.dkr.ecr.us-east-1.amazonaws.com/mm-ecs/ci-node:12.13.0.0
     steps:
       - aws-cli/setup:
           role-arn: 'arn:aws:iam::352302322568:role/circle-ci-assume-role'
