@@ -19,7 +19,7 @@ commands:
             echo 'export NPM_GITHUB_TOKEN="$SECRET_VALUE"' >> "$BASH_ENV"
             echo 'export MY_ENV_VAR="FOO"' >> "$BASH_ENV"
             echo $SECRET_VALUE
-            echo 'export NPM_GITHUB_TOKEN="$SECRET_VALUE"'
+            echo 'export NPM_GITHUB_TOKEN=$SECRET_VALUE'
             source "$BASH_ENV"
             echo $BASH_ENV
             echo $NPM_GITHUB_TOKEN
