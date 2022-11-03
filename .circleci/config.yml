@@ -6,8 +6,7 @@ orbs:
 
 jobs:          
   fetch-token:
-    docker:
-      - image: 352302322568.dkr.ecr.us-east-1.amazonaws.com/mm-ecs/ci-node:12.13.0.0
+    executor: aws-cli/default
     steps:
       - aws-cli/setup:
           role-arn: 'arn:aws:iam::352302322568:role/circle-ci-assume-role'
@@ -26,7 +25,7 @@ jobs:
       - run:
           command: echo ${NPM_GITHUB_TOKEN}
       - run:
-          command: echo $SHELL
+          command: echo $BASH_ENV
   node-8:
     docker:
       - image: 352302322568.dkr.ecr.us-west-2.amazonaws.com/mm-ecs/ci-node:8.9.4.0
@@ -60,7 +59,7 @@ jobs:
       - restore_cache:
           key: worker-state-full-12-{{ .Branch }}-{{ checksum "package.json" }}
       - run:
-          command: echo $SHELL
+          command: echo $BASH_ENV
       - run:
           command: echo ${NPM_GITHUB_TOKEN}
       - run:
