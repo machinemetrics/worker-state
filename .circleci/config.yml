@@ -8,7 +8,9 @@ jobs:
   fetch-token:
     executor: aws-cli/default
     steps:
-      - aws-cli/setup
+      - aws-cli/setup:
+          role-arn: 'arn:aws:iam::352302322568:role/circle-ci-assume-role'
+          role-session-name: 'ci-session'
       - run:
           command: aws sts get-caller-identity
       - run:
