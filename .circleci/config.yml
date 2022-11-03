@@ -6,9 +6,6 @@ orbs:
 
 jobs:          
   fetch-token:
-    shell: /bin/sh -leo pipefail
-    environment:
-      BASH_ENV: /etc/profile
     executor: aws-cli/default
     steps:
       - aws-cli/setup:
