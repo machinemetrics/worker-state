@@ -9,15 +9,8 @@ jobs:
     executor: aws-cli/default
     steps:
       - aws-cli/setup:
-          profile-name: default
-      - aws-cli/role-arn-setup:
-          profile-name: ci-profile
           role-arn: 'arn:aws:iam::352302322568:role/circle-ci-assume-role'
-          source-profile: default
-      - run: >-
-          aws sts assume-role --role-arn
-          "arn:aws:iam::352302322568:role/circle-ci-assume-role" --role-session-name
-          AWSCLI-Session
+          role-session-name: 'ci-session'
       - run:
           command: aws sts get-caller-identity
       - run:
