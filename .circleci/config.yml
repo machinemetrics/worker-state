@@ -10,14 +10,15 @@ commands:
           role-arn: 'arn:aws:iam::352302322568:role/circle-ci-assume-role'
           role-session-name: 'ci-session'
       - run:
-          command: aws sts get-caller-identity
-      - run:
           name: Fetch secret and set env var
           command: |
             RETRIEVED_SECRET=$(aws secretsmanager get-secret-value --secret-id production/npm_github_token_ci --query SecretString --output text)
             SECRET_VALUE=$(node -pe 'JSON.parse(process.argv[1]).NPM_GITHUB_TOKEN' $RETRIEVED_SECRET)
             echo 'export NPM_GITHUB_TOKEN="$SECRET_VALUE"' >> "$BASH_ENV"
             source "$BASH_ENV"
+      - run:
+          name: unset token
+          command: unset AWS_SESSION_TOKEN
 
 jobs:
   publish-package:
