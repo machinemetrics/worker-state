@@ -18,8 +18,7 @@ commands:
             source "$BASH_ENV"
       - run:
           command: |
-            sudo rm -r ~/.aws
-            unset AWS_SESSION_TOKEN
+            aws configure set aws_session_token ""
 
 jobs:
   publish-package:
