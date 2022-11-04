@@ -9,8 +9,8 @@ commands:
       - run:
           name: save keys for later
           command: |
-            export CONTEXT_AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
-            export CONTEXT_AWS_SECRET_ACCESS_TOKEN=$AWS_SECRET_ACCESS_TOKEN
+            CONTEXT_AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+            CONTEXT_AWS_SECRET_ACCESS_TOKEN=$AWS_SECRET_ACCESS_TOKEN
       - aws-cli/setup:
           role-arn: 'arn:aws:iam::352302322568:role/circle-ci-assume-role'
           role-session-name: 'ci-session'
@@ -23,6 +23,7 @@ commands:
             source "$BASH_ENV"
       - run:
           command: |
+            aws configure set aws_session_token ""
             unset AWS_SESSION_TOKEN
             aws configure set aws_access_key_id $CONTEXT_AWS_ACCESS_KEY_ID
             aws configure set aws_secret_access_token $CONTEXT_AWS_SECRET_ACCESS_TOKEN
