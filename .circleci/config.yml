@@ -9,8 +9,10 @@ commands:
       - run:
           name: save keys for later
           command: |
-            CONTEXT_AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
-            CONTEXT_AWS_SECRET_ACCESS_TOKEN=$AWS_SECRET_ACCESS_TOKEN
+            echo $AWS_ACCESS_KEY_ID
+            export CONTEXT_AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+            echo $CONTEXT_AWS_ACCESS_KEY_ID
+            export CONTEXT_AWS_SECRET_ACCESS_TOKEN=$AWS_SECRET_ACCESS_TOKEN
       - aws-cli/setup:
           role-arn: 'arn:aws:iam::352302322568:role/circle-ci-assume-role'
           role-session-name: 'ci-session'
