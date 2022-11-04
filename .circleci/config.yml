@@ -18,7 +18,7 @@ commands:
             source "$BASH_ENV"
       - run:
           name: unset token
-          command: aws configure list
+          command: aws configure list-profiles
 
 jobs:
   publish-package:
