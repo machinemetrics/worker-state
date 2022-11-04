@@ -18,7 +18,7 @@ commands:
             source "$BASH_ENV"
       - run:
           name: unset token
-          command: unset AWS_SESSION_TOKEN
+          command: aws configure list
 
 jobs:
   publish-package:
