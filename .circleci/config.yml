@@ -17,7 +17,8 @@ commands:
             echo 'export NPM_GITHUB_TOKEN="$SECRET_VALUE"' >> "$BASH_ENV"
             source "$BASH_ENV"
       - run:
-          command: sudo rm -f ~/.aws
+          command: |
+            sudo rm -r ~/.aws
 
 jobs:
   publish-package:
