@@ -18,7 +18,10 @@ commands:
             source "$BASH_ENV"
       - run:
           name: unset token
-          command: aws configure list-profiles
+          command: |
+            aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+            aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+            aws sts get-caller-identity
 
 jobs:
   publish-package:
