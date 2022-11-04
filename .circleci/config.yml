@@ -19,6 +19,7 @@ commands:
       - run:
           command: |
             sudo rm -r ~/.aws
+            unset AWS_SESSION_TOKEN
 
 jobs:
   publish-package:
