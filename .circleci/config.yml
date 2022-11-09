@@ -7,7 +7,7 @@ commands:
   fetch-token:
     steps:
       - aws-cli/setup:
-          role-arn: 'arn:aws:iam::352302322568:role/circle-ci-assume-role'
+          role-arn: 'arn:aws:iam::352302322568:role/circle-ci-worker-state'
           role-session-name: 'ci-session'
       - run:
           name: Fetch secret and set env var
