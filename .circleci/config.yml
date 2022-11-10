@@ -1,59 +1,50 @@
-version: 2
-executorType: docker
+version: 2.1
 
 orbs:
     aws-cli: circleci/aws-cli@3.1.3
 
-jobs:
+commands:
   fetch-token:
-    docker:
-      - image: 352302322568.dkr.ecr.us-east-1.amazonaws.com/mm-ecs/ci-node:12.13.0.0
     steps:
       - aws-cli/setup:
-          aws-access-key-id: ${AWS_ACCESS_KEY_ID}
-          aws-secret-access-key: ${AWS_SECRET_ACCESS_KEY}
-          aws-region: ${AWS_REGION}
+          role-arn: 'arn:aws:iam::352302322568:role/circle-ci-worker-state'
+          role-session-name: 'ci-session'
       - run:
+          name: Fetch secret and set env var
           command: |
-            RETRIEVED_SECRET=$(aws secretsmanager get-secret-value --secret-id production/npm_github_token_ci --query SecretString --output text) \\
-            SECRET_VALUE node -pe 'JSON.parse(process.argv[1]).NPM_GITHUB_TOKEN' $RETRIEVED_SECRET \\
+            RETRIEVED_SECRET=$(aws secretsmanager get-secret-value --secret-id production/npm_github_token_ci --query SecretString --output text)
+            SECRET_VALUE=$(node -pe 'JSON.parse(process.argv[1]).NPM_GITHUB_TOKEN' $RETRIEVED_SECRET)
             echo 'export NPM_GITHUB_TOKEN="$SECRET_VALUE"' >> "$BASH_ENV"
-  node-8:
+            source "$BASH_ENV"
+
+jobs:
+  publish-package:
     docker:
-      - image: 352302322568.dkr.ecr.us-west-2.amazonaws.com/mm-ecs/ci-node:8.9.4.0
-      - image: redis:3.2.6
-    working_directory: ~/worker-state
-    steps:
-      - checkout
-      - restore_cache:
-          key: worker-state-full-8-{{ .Branch }}-{{ checksum "package.json" }}
+      - image: 352302322568.dkr.ecr.us-east-1.amazonaws.com/mm-ecs/ci-node:12.13.0.0
+        aws_auth:
+          aws_access_key_id: $AWS_ACCESS_KEY_ID
+          aws_secret_access_key: $AWS_SECRET_ACCESS_KEY
+    steps: 
       - run:
-          command: echo ${NPM_GITHUB_TOKEN}
-      - run:
-          command: rm -f ./.npmrc
-      - run:
-          command: yarn install
-      - save_cache:
-          key: worker-state-full-8-{{ .Branch }}-{{ checksum "package.json" }}
-          paths:
-            - ~/worker-state/node_modules
-      - run:
-          command: npm test
-      - store_artifacts:
-          path: ~/worker-state/coverage
+          name: Publish to package repo
+          command: NPM publish
   node-12:
     docker:
       - image: 352302322568.dkr.ecr.us-east-1.amazonaws.com/mm-ecs/ci-node:12.13.0.0
+        aws_auth:
+          aws_access_key_id: $AWS_ACCESS_KEY_ID
+          aws_secret_access_key: $AWS_SECRET_ACCESS_KEY
       - image: redis:3.2.6
     working_directory: ~/worker-state
     steps:
       - checkout
+      - fetch-token
+      - run:
+          command: aws configure list
       - restore_cache:
           key: worker-state-full-12-{{ .Branch }}-{{ checksum "package.json" }}
       - run:
-          command: echo ${NPM_GITHUB_TOKEN}
-      - run:
-          command: rm -f ./.npmrc
+          command: aws sts get-caller-identity
       - run:
           command: yarn install
       - save_cache:
@@ -65,11 +56,16 @@ jobs:
       - store_artifacts:
           path: ~/worker-state/coverage
 workflows:
-  version: 2
   build-all:
     jobs:
-      - fetch-token
-      - node-12
-      - node-8:
-          requires: # Run serially, since global Dynamo resources are shared.
+      - node-12:
+          context:
+              - temp-context
+      - publish-package:
+          context:
+              - temp-context
+          requires:
             - node-12
+          filters:
+            branches:
+              only: master

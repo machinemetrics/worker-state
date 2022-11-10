@@ -9,14 +9,6 @@ const https = require('https');
 // Kinesalite is self-signed and normally invalid for node, so ignore it.
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
-AWS.config.update({
-  s3ForcePathStyle: true,
-  sslEnabled: true,
-  region: process.env.AWS_REGION,
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-});
-
 function TestServices() {}
 
 TestServices.NextPort = (function () {
@@ -24,7 +16,7 @@ TestServices.NextPort = (function () {
   return function () {
     return nextPort++;
   };
-})();
+}());
 
 TestServices.prototype.initKinesis = function (cfg) {
   var deferred = Q.defer();
