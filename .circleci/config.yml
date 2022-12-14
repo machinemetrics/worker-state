@@ -11,7 +11,8 @@ jobs:
         aws_auth:
           aws_access_key_id: $AWS_ACCESS_KEY_ID
           aws_secret_access_key: $AWS_SECRET_ACCESS_KEY
-      - image: redis:3.2.6
+      - image: 352302322568.dkr.ecr.us-west-2.amazonaws.com/mm-data-platform/redis:8da63f72fa4ab3a49ee9301947525baa67f6581d
+      - image: 352302322568.dkr.ecr.us-west-2.amazonaws.com/mm-data-platform/redis-test:1702aafd8728cb3b8d0885a182d82bc37997fafd
     working_directory: ~/worker-state
     steps:
       - checkout
