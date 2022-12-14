@@ -9,6 +9,7 @@ const should = require('should');
 const WorkerState = require('../lib').WorkerState;
 const RedisStore = require('../lib').WorkerStores.Redis;
 const MemoryStore = require('../lib').WorkerStores.Memory;
+const TestServices = require('./util/TestServices');
 
 require('q-repeat');
 
@@ -16,11 +17,36 @@ const workerTable = 'TestWorkerTable';
 const defaultShard = 'shardId-000000000000';
 const memStore = {};
 
+const testServices = new TestServices();
+
 const stateFactory = {
   dynamo: shard => new WorkerState('wsunit', shard, workerTable),
   redis: shard => new WorkerState('wsunit', shard, new RedisStore('localhost', 6379)),
   memory: shard => new WorkerState('wsunit', shard, new MemoryStore(memStore)),
+  redisMulti: shard => new WorkerState('wsunit', shard, new RedisStore('localhost', 6379, 'multistore', {
+    secondary: {
+      host: 'localhost',
+      port: 6380,
+    },
+  })),
 };
+
+const postValidateFactory = {
+  redisMulti: function (state) {
+    return testServices.validateRedisSecondary(state).then(function (result) {
+      _.each(result, (data) => {
+        data.primary.should.eql(data.secondary);
+      });
+    });
+  },
+};
+
+function postValidate(name, state) {
+  if (postValidateFactory[name]) {
+    return postValidateFactory[name](state);
+  }
+  return Q();
+}
 
 describe('Worker state initialization', () => {
   _.each(stateFactory, (func, name) => {
@@ -132,6 +158,8 @@ describe('Primitive store operations', () => {
         return state.readFromWorkerState('write1', null, 2).then((item) => {
           recordShouldMatch(item, 'prose', 'old', 1);
         });
+      }).then(() => {
+        return postValidate(name, state);
       });
     });
 
@@ -143,6 +171,8 @@ describe('Primitive store operations', () => {
         return state.readFromWorkerState('write2', null, 3).then((item) => {
           should.not.exist(item);
         });
+      }).then(() => {
+        return postValidate(name, state);
       });
     });
 
@@ -158,6 +188,8 @@ describe('Primitive store operations', () => {
             should.not.exist(item);
           });
         });
+      }).then(() => {
+        return postValidate(name, state);
       });
     });
 
@@ -169,6 +201,8 @@ describe('Primitive store operations', () => {
         return state.readFromWorkerState('write4', 'sec1', 4).then((item) => {
           recordShouldMatch(item, 'prose', 'old', 3);
         });
+      }).then(() => {
+        return postValidate(name, state);
       });
     });
 
@@ -184,6 +218,8 @@ describe('Primitive store operations', () => {
             should.not.exist(item);
           });
         });
+      }).then(() => {
+        return postValidate(name, state);
       });
     });
 
@@ -212,6 +248,8 @@ describe('Primitive store operations', () => {
             });
           });
         });
+      }).then(() => {
+        return postValidate(name, state);
       });
     });
   });
@@ -246,6 +284,8 @@ describe('Checkpointing store', function () {
           });
         });
       }).then(function () {
+        return postValidate(name, state);
+      }).then(function () {
         const restate = func(defaultShard);
         return restate.initialize(['cp1-1', 'cp1-2', 'cp1-3', 'cp1-4'], ['sub1', 'sub2', 'sub3']).then(() => {
           restate.checkpoint.should.equal(5);
@@ -267,6 +307,8 @@ describe('Checkpointing store', function () {
             itemShouldMatch(restate.substate['cp1-3'].sub2, 'h', 'h', 10, false);
             itemShouldMatch(restate.substate['cp1-3'].sub3, undefined, undefined, 10, false);
           });
+        }).then(() => {
+          return postValidate(name, restate);
         });
       }).then(() => {
         const terstate = func(defaultShard);
@@ -279,8 +321,10 @@ describe('Checkpointing store', function () {
 
           terstate.state.should.not.have.property('cp1-4');
           terstate.substate['cp1-3'].should.not.have.property('sub3');
+        }).then(function () {
+          return postValidate(name, terstate);
         });
-      }).then(() => {
+      }).finally(() => {
         return state.expungeAllKnownSavedState();
       });
     });
