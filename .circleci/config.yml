@@ -34,10 +34,10 @@ workflows:
     jobs:
       - node-12:
           context:
-              - temp-context
+              - npm-publishing
       - node-packages/publish-package:
           context:
-              - temp-context
+              - npm-publishing
           requires:
             - node-12
           filters:
