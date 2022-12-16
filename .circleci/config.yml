@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-    node-packages: machinemetrics/node-packages@0.0.1
+    node-packages: machinemetrics/node-packages@0.0.2
 
 jobs:
   node-12:
@@ -29,17 +29,15 @@ jobs:
           command: npm test
       - store_artifacts:
           path: ~/worker-state/coverage
+      - when:
+          condition:
+            equal: [master, <<pipeline.git.branch>>]
+          steps:
+            - node-packages/publish-package:
+                build: false
 workflows:
   build-all:
     jobs:
       - node-12:
           context:
               - npm-publishing
-      - node-packages/publish-package:
-          context:
-              - npm-publishing
-          requires:
-            - node-12
-          filters:
-            branches:
-              only: master
