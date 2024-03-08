@@ -1,4 +1,7 @@
-version: 2
+version: 2.1
+orbs:
+  npm-publish: machinemetrics/npm-publish@0.1.2
+
 executorType: docker
 jobs:
   node-12:
@@ -21,6 +24,12 @@ jobs:
           command: npm test
       - store_artifacts:
           path: ~/worker-state/coverage
+      - when:
+          condition:
+            equal: [npm-master, <<pipeline.git.branch>>]
+          steps:
+            - npm-publish/publish:
+                role-arn: arn:aws:iam::352302322568:role/circle-ci-npm-artifact
 workflows:
   version: 2
   build-all:
