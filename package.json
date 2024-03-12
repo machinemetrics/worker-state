@@ -1,5 +1,4 @@
 {
-  "private": "true",
   "name": "@m12s/worker-state",
   "description": "A data checkpointing service for Kinesis or other stream/batch applications",
   "version": "0.1.1",
